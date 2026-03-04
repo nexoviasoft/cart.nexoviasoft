@@ -124,10 +124,11 @@ export const productApiSlice = apiSlice.injectEndpoints({
 
     // Set flash sell for products
     setFlashSell: builder.mutation({
-      query: (body) => ({
+      query: ({ body, params }) => ({
         url: "/products/flash-sell",
         method: "POST",
         body,
+        params,
       }),
       invalidatesTags: [
         { type: "products", id: "LIST" },
@@ -137,10 +138,11 @@ export const productApiSlice = apiSlice.injectEndpoints({
 
     // Remove flash sell from products
     removeFlashSell: builder.mutation({
-      query: (body) => ({
+      query: ({ body, params }) => ({
         url: "/products/flash-sell",
         method: "DELETE",
         body,
+        params,
       }),
       invalidatesTags: [
         { type: "products", id: "LIST" },

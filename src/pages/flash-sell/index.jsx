@@ -367,7 +367,10 @@ const FlashSellPage = () => {
           : {}),
       };
 
-      const res = await setFlashSell(payload).unwrap();
+      const res = await setFlashSell({
+        body: payload,
+        params: { companyId: authUser?.companyId },
+      }).unwrap();
       if (res) {
         toast.success(t("flashSell.flashSellSetSuccess"));
         reset();
@@ -388,7 +391,8 @@ const FlashSellPage = () => {
 
     try {
       const res = await removeFlashSell({
-        productIds: [deleteModal.product.id],
+        body: { productIds: [deleteModal.product.id] },
+        params: { companyId: authUser?.companyId },
       }).unwrap();
       if (res) {
         toast.success(t("flashSell.productRemovedFromFlashSell"));
