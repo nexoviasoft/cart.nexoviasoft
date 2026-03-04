@@ -51,14 +51,6 @@ export default function ProductVariantImagesSection({
       </div>
       <div className="col-span-12 lg:col-span-8">
         <div className="space-y-4">
-          {(!variants || variants.length === 0) && (
-            <div className="p-8 text-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                No variants added. Please add color variants above to upload
-                specific images.
-              </p>
-            </div>
-          )}
           {variants?.map((variant) => (
             <div
               key={variant.id}

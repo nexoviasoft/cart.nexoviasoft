@@ -342,28 +342,8 @@ export default function ProductEditPage() {
               categoryOption={categoryOption}
               setCategoryOption={setCategoryOption}
             />
-            <ProductSizeVariantSection
-              sizes={sizes}
-              selectedSizes={selectedSizes}
-              setSelectedSizes={setSelectedSizes}
-              setSizes={setSizes}
-              isAddingSize={isAddingSize}
-              setIsAddingSize={setIsAddingSize}
-              newSizeValue={newSizeValue}
-              setNewSizeValue={setNewSizeValue}
-            />
-            <ProductVariantSection
-              variants={variants}
-              updateVariant={updateVariant}
-              removeVariant={removeVariant}
-              isAddingVariant={isAddingVariant}
-              setIsAddingVariant={setIsAddingVariant}
-              newVariantName={newVariantName}
-              setNewVariantName={setNewVariantName}
-              newVariantColor={newVariantColor}
-              setNewVariantColor={setNewVariantColor}
-              handleAddVariant={handleAddVariant}
-            />
+     
+           
             <ProductDescriptionSection
               control={control}
               errors={errors}

@@ -374,32 +374,9 @@ function CreateProductPage() {
               categoryOption={categoryOption}
               setCategoryOption={setCategoryOption}
             />
-            <ProductSizeVariantSection
-              sizes={sizes}
-              selectedSizes={selectedSizes}
-              setSelectedSizes={setSelectedSizes}
-              setSizes={setSizes}
-              isAddingSize={isAddingSize}
-              setIsAddingSize={setIsAddingSize}
-              newSizeValue={newSizeValue}
-              setNewSizeValue={setNewSizeValue}
-            />
-            <ProductVariantSection
-              variants={variants}
-              updateVariant={updateVariant}
-              removeVariant={removeVariant}
-              isAddingVariant={isAddingVariant}
-              setIsAddingVariant={setIsAddingVariant}
-              newVariantName={newVariantName}
-              setNewVariantName={setNewVariantName}
-              newVariantColor={newVariantColor}
-              setNewVariantColor={setNewVariantColor}
-              handleAddVariant={handleAddVariant}
-            />
-            <ProductVariantImagesSection
-              variants={variants}
-              updateVariant={updateVariant}
-            />
+
+        
+    
             <ProductDescriptionSection
               control={control}
               errors={errors}

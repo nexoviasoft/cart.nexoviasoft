@@ -591,6 +591,33 @@ const OrderViewPage = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Order Info Card */}
+          {order.orderInfo && (
+            <motion.div
+              variants={itemVariants}
+              className="bg-white dark:bg-slate-800 rounded-[32px] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-[18px] bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
+                  <Receipt className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    {t("orders.orderInfo", "Order Info")}
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">
+                    {t("orders.additionalDetails", "Additional Details")}
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                  {String(order.orderInfo)}
+                </p>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
