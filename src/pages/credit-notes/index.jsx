@@ -239,6 +239,8 @@ const CreditNotesPage = () => {
         onExportAllRecords={() => exportToPDF(true)}
         currentPageRecordCount={paginatedNotes?.length || 0}
         allFilteredRecordCount={filteredNotes?.length || 0}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
       />
 
       <CreditNotesStatsCards stats={stats} />
