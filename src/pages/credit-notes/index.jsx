@@ -175,6 +175,8 @@ const CreditNotesPage = () => {
     lastMonthRefundAmount
   );
 
+  const formatBDT = (amount) => `৳${Number(amount || 0).toLocaleString("en-BD")}`;
+
   const stats = [
     {
       label: t("creditNotes.allCancelledOrders"),
@@ -208,7 +210,7 @@ const CreditNotesPage = () => {
     },
     {
       label: t("creditNotes.totalRefundAmount"),
-      value: `$${totalRefundAmount.toLocaleString()}`,
+      value: formatBDT(totalRefundAmount),
       trend: `${refundAmountTrend > 0 ? "+" : ""}${refundAmountTrend.toFixed(1)}%`,
       trendDir: refundAmountTrend >= 0 ? "up" : "down",
       icon: "CreditCard",

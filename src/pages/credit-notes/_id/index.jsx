@@ -138,8 +138,8 @@ const CreditNoteDetailsPage = () => {
                   <tr>
                     <td>${item.product?.name || `Product #${item.productId}`}</td>
                     <td>${item.quantity}</td>
-                    <td>$${Number(item.unitPrice).toLocaleString()}</td>
-                    <td>$${Number(item.totalPrice).toLocaleString()}</td>
+                    <td>৳${Number(item.unitPrice).toLocaleString("en-BD")}</td>
+                    <td>৳${Number(item.totalPrice).toLocaleString("en-BD")}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -160,7 +160,7 @@ const CreditNoteDetailsPage = () => {
             ${isOrder ? `
             <div class="info-row">
               <span class="info-label">${t("creditNotes.detail.paidAmount")}:</span>
-              <span class="info-value">$${Number(note.paidAmount || 0).toLocaleString()}</span>
+              <span class="info-value">৳${Number(note.paidAmount || 0).toLocaleString("en-BD")}</span>
             </div>
             ` : ''}
             ${note.cancelNote || note.reason ? `
@@ -174,7 +174,7 @@ const CreditNoteDetailsPage = () => {
           <div class="total-section">
             <div class="info-row">
               <span class="info-label" style="font-size: 20px;">${isOrder ? t("creditNotes.detail.totalAmount") : t("creditNotes.detail.refundAmount")}:</span>
-              <span class="total-amount">$${Number(isOrder ? note.totalAmount : note.amount).toLocaleString()}</span>
+              <span class="total-amount">৳${Number(isOrder ? note.totalAmount : note.amount).toLocaleString("en-BD")}</span>
             </div>
           </div>
 
@@ -355,7 +355,7 @@ const CreditNoteDetailsPage = () => {
                     {note.relatedInvoice.invoiceNumber}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {t("creditNotes.detail.invoiceAmount")}: ${note.relatedInvoice.total}
+                    {t("creditNotes.detail.invoiceAmount")}: ৳{Number(note.relatedInvoice.total || 0).toLocaleString("en-BD")}
                   </p>
                 </div>
               )}
@@ -393,11 +393,11 @@ const CreditNoteDetailsPage = () => {
                         {item.product?.name || `Product #${item.productId}`}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {t("creditNotes.detail.quantity")}: {item.quantity} × ${Number(item.unitPrice).toLocaleString()}
+                        {t("creditNotes.detail.quantity")}: {item.quantity} × ৳{Number(item.unitPrice).toLocaleString("en-BD")}
                       </p>
                     </div>
                     <p className="font-bold text-gray-900 dark:text-white">
-                      ${Number(item.totalPrice).toLocaleString()}
+                      ৳{Number(item.totalPrice).toLocaleString("en-BD")}
                     </p>
                   </div>
                 ))}
@@ -414,7 +414,7 @@ const CreditNoteDetailsPage = () => {
                 {isOrder ? t("creditNotes.detail.orderAmount") : t("creditNotes.detail.refundAmount")}
               </p>
               <h2 className="text-4xl font-bold tracking-tight">
-                ${Number(isOrder ? note.totalAmount : note.amount).toLocaleString()}
+                ৳{Number(isOrder ? note.totalAmount : note.amount).toLocaleString("en-BD")}
               </h2>
 
               {isOrder && (
@@ -422,13 +422,13 @@ const CreditNoteDetailsPage = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-purple-100 text-sm">{t("creditNotes.detail.paidAmount")}</span>
                     <span className="font-semibold">
-                      ${Number(note.paidAmount || 0).toLocaleString()}
+                      ৳{Number(note.paidAmount || 0).toLocaleString("en-BD")}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-purple-100 text-sm">{t("creditNotes.detail.remaining")}</span>
                     <span className="font-semibold">
-                      ${Number((note.totalAmount || 0) - (note.paidAmount || 0)).toLocaleString()}
+                      ৳{Number((note.totalAmount || 0) - (note.paidAmount || 0)).toLocaleString("en-BD")}
                     </span>
                   </div>
                 </div>

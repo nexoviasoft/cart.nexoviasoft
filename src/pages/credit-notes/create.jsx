@@ -195,7 +195,7 @@ const CreateCreditNotePage = () => {
                     Refund Amount <span className="text-[#976DF7]">*</span>
                   </label>
                   <div className="relative group">
-                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold group-focus-within:text-[#976DF7] transition-colors">$</span>
+                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold group-focus-within:text-[#976DF7] transition-colors">৳</span>
                      <input 
                        type="number"
                        placeholder="0.00"

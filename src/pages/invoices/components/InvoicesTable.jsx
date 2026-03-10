@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -225,7 +225,7 @@ export default function InvoicesTable({
                   };
                   downloadSaleInvoicePDF(invoice, companyInfo);
                   toast.success(t("invoices.toast.downloadSuccess"));
-                } catch (err) {
+                } catch {
                   toast.error(t("invoices.toast.downloadFailed"));
                 }
               }}
@@ -246,14 +246,14 @@ export default function InvoicesTable({
         </DropdownMenu>
       ),
     }));
-  }, [filteredData, authUser, onDeleteClick]);
+  }, [filteredData, authUser, onDeleteClick, navigate, t]);
 
   return (
     <ReusableTable
       data={tableData}
       headers={localizedHeaders}
       isLoading={isLoading}
-      searchPlaceholder={t("invoices.table.searchPlaceholder")}
+      searchable={false}
       py="py-4"
     />
   );

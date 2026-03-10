@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -33,6 +33,7 @@ const InvoicesPage = () => {
   const { t } = useTranslation();
 
   const [statusFilter, setStatusFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
 
@@ -307,12 +308,19 @@ const InvoicesPage = () => {
   }, [displayData]);
 
   const filteredData = useMemo(() => {
-    if (statusFilter === "All") return displayData;
+    const term = searchTerm.trim().toLowerCase();
     return displayData.filter((inv) => {
-      const s = (inv.status || "").toLowerCase();
-      return s === statusFilter.toLowerCase();
+      const statusOk =
+        statusFilter === "All" ||
+        (inv.status || "").toLowerCase() === statusFilter.toLowerCase();
+      if (!statusOk) return false;
+      if (!term) return true;
+
+      const id = String(inv.id || "").toLowerCase();
+      const customerName = String(inv.customer?.name || inv.customerName || "").toLowerCase();
+      return id.includes(term) || customerName.includes(term);
     });
-  }, [displayData, statusFilter]);
+  }, [displayData, statusFilter, searchTerm]);
 
   const handleDeleteClick = useCallback((invoice) => {
     setInvoiceToDelete(invoice);
@@ -337,8 +345,12 @@ const InvoicesPage = () => {
   }, [invoiceToDelete, authUser?.companyId, deleteSaleInvoice, t]);
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-[#1a1f26] border border-gray-100 dark:border-gray-800 p-6 space-y-6">
-      <InvoicesHeader onNewInvoice={() => navigate("/invoices/create")} />
+    <div className="rounded-2xl  p-6 space-y-6">
+      <InvoicesHeader
+        onNewInvoice={() => navigate("/invoices/create")}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
 
       <InvoicesStatsCards stats={stats} />
 

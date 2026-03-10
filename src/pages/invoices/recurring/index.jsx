@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -33,6 +33,7 @@ import {
   RefreshCw,
   MoreHorizontal,
   TrendingUp,
+  Search,
 } from "lucide-react";
 import {
   format,
@@ -50,6 +51,7 @@ const RecurringInvoicesPage = () => {
 
   // State
   const [statusFilter, setStatusFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState(null);
 
@@ -274,11 +276,23 @@ const RecurringInvoicesPage = () => {
 
   // Filter Data
   const filteredData = useMemo(() => {
-    if (statusFilter === "All") return mockRecurringInvoices;
-    return mockRecurringInvoices.filter(
-      (inv) => inv.status.toLowerCase() === statusFilter.toLowerCase(),
-    );
-  }, [statusFilter]);
+    const term = searchTerm.trim().toLowerCase();
+    return mockRecurringInvoices.filter((inv) => {
+      const statusOk =
+        statusFilter === "All" ||
+        inv.status.toLowerCase() === statusFilter.toLowerCase();
+      if (!statusOk) return false;
+      if (!term) return true;
+      return (
+        String(inv.id || "")
+          .toLowerCase()
+          .includes(term) ||
+        String(inv.customer || "")
+          .toLowerCase()
+          .includes(term)
+      );
+    });
+  }, [statusFilter, searchTerm]);
 
   // Map Data for Table
   const tableData = useMemo(() => {
@@ -404,19 +418,39 @@ const RecurringInvoicesPage = () => {
 
   return (
     <div className="p-6 lg:p-10 bg-[#f8f9fa] dark:bg-[#0b0f14] min-h-screen font-sans space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-2">
-        <div className="space-y-2">
-          
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-            Recurring <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">Invoices</span>
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium max-w-lg text-base">
-            Automate your billing cycles and manage subscription-based payments efficiently.
-          </p>
-        </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 mb-2">
+        <div className="w-full">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 grid place-items-center">
+              <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            </div>
 
-     
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+                  Recurring Invoices
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 max-w-2xl">
+                  Automate your billing cycles and manage subscription-based
+                  payments efficiently.
+                </p>
+              </div>
+
+              <div className="w-full sm:w-auto sm:min-w-[320px] max-w-xl">
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search recurring invoices..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-11 pl-11 pr-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm font-medium shadow-sm hover:shadow-md text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -535,7 +569,7 @@ const RecurringInvoicesPage = () => {
           data={tableData}
           headers={headers}
           isLoading={false}
-          searchPlaceholder="Search recurring invoices..."
+          searchable={false}
           py="py-4"
         />
       </div>

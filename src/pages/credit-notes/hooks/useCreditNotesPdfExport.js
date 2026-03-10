@@ -24,6 +24,8 @@ export function useCreditNotesPdfExport({
 }) {
   const { t } = useTranslation();
 
+  const formatBDT = (amount) => `৳${Number(amount || 0).toLocaleString("en-BD")}`;
+
   const exportToPDF = useCallback(
     (exportAll = false) => {
       try {
@@ -66,7 +68,7 @@ export function useCreditNotesPdfExport({
           [t("creditNotes.allCancelledOrders"), cancelledOrdersCount],
           [t("creditNotes.pendingRefund"), pendingRefundCount],
           [t("creditNotes.successfullyRefunded"), refundedCount],
-          [t("creditNotes.totalRefundAmount"), `$${Number(totalRefundAmount || 0).toLocaleString()}`],
+          [t("creditNotes.totalRefundAmount"), formatBDT(totalRefundAmount)],
         ];
         const tableContentWidth = pageWidth - margin * 2;
         const summaryCol0 = tableContentWidth * 0.65;
@@ -118,7 +120,7 @@ export function useCreditNotesPdfExport({
             note.displayId || `Order #${note.id}`,
             note.customer?.name || note.customerName || "N/A",
             shortEmail,
-            `$${Number(note.amount || 0).toLocaleString()}`,
+            formatBDT(note.amount),
             format(new Date(note.date || note.createdAt), "dd MMM yyyy"),
             note.status || "N/A",
           ];

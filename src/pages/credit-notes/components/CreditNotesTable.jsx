@@ -20,6 +20,8 @@ const CreditNotesTable = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const formatBDT = (amount) => `৳${Number(amount || 0).toLocaleString("en-BD")}`;
+
   const handleRowClick = (note) => {
     if (onViewDetails) onViewDetails(note);
     else navigate(`/credit-notes/${note.id}`);
@@ -95,7 +97,7 @@ const CreditNotesTable = ({
                 </td>
                 <td className="px-6 py-4">
                   <span className="font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
-                    ${Number(note.amount || 0).toLocaleString()}
+                    {formatBDT(note.amount)}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-gray-500 font-medium">
