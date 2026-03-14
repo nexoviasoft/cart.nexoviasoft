@@ -231,10 +231,6 @@ export default function ProductEditPage() {
     }
   }, [product, categories, setValue]);
 
-  useEffect(() => {
-    setSelectedSizes([]);
-  }, [selectedType]);
-
   const handleAddVariant = useCallback(() => {
     if (newVariantName.trim()) {
       setVariants((prev) => [
@@ -412,7 +408,10 @@ export default function ProductEditPage() {
                   Product Types
                 </h3>
               </div>
-              <RadioGroup value={selectedType} onValueChange={setSelectedType} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <RadioGroup value={selectedType} onValueChange={(val) => {
+                setSelectedType(val);
+                setSelectedSizes([]);
+              }} className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {typeOptions.map((opt) => {
                   const id = `type-${opt}`;
                   return (

@@ -193,10 +193,16 @@
     "noResults": "No results found for \"{{term}}\"",
     "orders": "Orders",
     "products": "Products",
-    "customers": "Customers"
+    "customers": "Customers",
+    "notifications": "Search notifications"
   },
   "notifications": {
     "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "all": "All",
+    "urgent": "Urgent",
+    "normal": "Normal",
+    "resolved": "Resolved",
     "subtitle": "View and manage your notifications.",
     "loading": "Loading notifications...",
     "markAllAsRead": "Mark all as read",

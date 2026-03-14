@@ -188,10 +188,16 @@
     "noResults": "\"{{term}}\" এর জন্য কোন ফলাফল পাওয়া যায়নি",
     "orders": "অর্ডার",
     "products": "পণ্য",
-    "customers": "গ্রাহক"
+    "customers": "গ্রাহক",
+    "notifications": "বিজ্ঞপ্তি অনুসন্ধান"
   },
   "notifications": {
     "title": "বিজ্ঞপ্তি",
+    "markAllRead": "সব পঠিত চিহ্নিত করুন",
+    "all": "সব",
+    "urgent": "জরুরি",
+    "normal": "সাধারণ",
+    "resolved": "সমাধানকৃত",
     "loading": "বিজ্ঞপ্তি লোড হচ্ছে...",
     "noNotifications": "এখনও কোন বিজ্ঞপ্তি নেই",
     "refresh": "বিজ্ঞপ্তি রিফ্রেশ করুন",
