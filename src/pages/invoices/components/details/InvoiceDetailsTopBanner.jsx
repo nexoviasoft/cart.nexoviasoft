@@ -1,4 +1,4 @@
-import React from "react";
+ 
 
 export default function InvoiceDetailsTopBanner({
   companyName,
@@ -36,7 +36,7 @@ export default function InvoiceDetailsTopBanner({
               <div className="w-2 h-2 rounded-full bg-white" />
             </div>
             <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-              {companyName || "SquadCart"}
+              {companyName || "InnowaveCart"}
             </span>
           </div>
         )}
@@ -47,7 +47,7 @@ export default function InvoiceDetailsTopBanner({
           Invoice
         </h1>
         <p className="text-gray-900 dark:text-gray-300 font-bold mt-2">
-          {companyName || "SquadCart"}
+          {companyName || "InnowaveCart"}
         </p>
         <p className="text-sm text-gray-500">{branchLocation || "-"}</p>
       </div>

@@ -44,7 +44,7 @@ export const generateInvoicePDF = (invoice) => {
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setCharSpace(0); // Ensure no character spacing
-  doc.text("SquadCart", margin + 5, margin + 8);
+  doc.text("InnowaveCart", margin + 5, margin + 8);
 
   // Invoice Title (Top Right)
   doc.setTextColor(...secondaryColor);
@@ -162,11 +162,11 @@ export const generateInvoicePDF = (invoice) => {
       2: { cellWidth: 40, halign: "right", fontStyle: "bold" },
     },
     margin: { left: margin, right: margin },
-    willDrawCell: function(data) {
+    willDrawCell: function() {
       // Reset character spacing before drawing each cell
       doc.setCharSpace(0);
     },
-    didDrawCell: function(data) {
+    didDrawCell: function() {
       // Reset character spacing after drawing each cell
       doc.setCharSpace(0);
     },

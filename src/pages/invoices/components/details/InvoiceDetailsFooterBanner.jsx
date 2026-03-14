@@ -1,4 +1,4 @@
-import React from "react";
+ 
 
 export default function InvoiceDetailsFooterBanner({ companyName, branchLocation }) {
   return (
@@ -6,7 +6,7 @@ export default function InvoiceDetailsFooterBanner({ companyName, branchLocation
       <div className="absolute right-0 top-0 h-full w-[40%] bg-gradient-to-l from-[#7c3aed]/5 to-transparent" />
       <div className="space-y-1 relative z-10">
         <p className="text-xs font-black text-gray-900 dark:text-white uppercase">
-          {companyName || "SquadCart"}
+          {companyName || "InnowaveCart"}
         </p>
         <p className="text-[10px] text-gray-400">{branchLocation || "-"}</p>
       </div>
@@ -15,7 +15,7 @@ export default function InvoiceDetailsFooterBanner({ companyName, branchLocation
           <div className="w-1.5 h-1.5 rounded-full bg-white" />
         </div>
         <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {companyName || "SquadCart"}
+          {companyName || "InnowaveCart"}
         </span>
       </div>
     </div>
