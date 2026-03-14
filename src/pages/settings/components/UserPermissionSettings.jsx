@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -14,38 +14,31 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   ChevronDown,
   Search,
-  Filter,
-  Download,
-  MoreHorizontal,
-  Plus,
   Shield,
   Users,
   Lock,
+  Trash2,
 } from "lucide-react";
 import { useGetSystemusersQuery } from "@/features/systemuser/systemuserApiSlice";
+import { useDeleteSystemuserMutation } from "@/features/systemuser/systemuserApiSlice";
 import { useGetCurrentUserQuery } from "@/features/auth/authApiSlice";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
+ 
+import toast from "react-hot-toast";
 
 const UserPermissionSettings = () => {
   const { data: apiData, isLoading } = useGetSystemusersQuery();
   const { data: currentUser } = useGetCurrentUserQuery();
+  const [deleteSystemuser, { isLoading: isDeleting }] = useDeleteSystemuserMutation();
+  const [busyId, setBusyId] = useState(null);
   const rawList = apiData?.data ?? apiData ?? [];
 
   // State for pagination and search
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Process data
@@ -203,22 +196,6 @@ const UserPermissionSettings = () => {
               className="pl-10 h-10 bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-violet-500/20"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="h-10 rounded-xl border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-            <Button
-              variant="outline"
-              className="h-10 rounded-xl border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
         </div>
 
         {/* Table */}
@@ -320,33 +297,26 @@ const UserPermissionSettings = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="w-40 rounded-xl"
-                        >
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem className="cursor-pointer">
-                            Edit Permissions
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            View Profile
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50">
-                            Revoke Access
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="rounded-lg"
+                        disabled={isDeleting && busyId === user.id}
+                        onClick={async () => {
+                          try {
+                            setBusyId(user.id);
+                            await deleteSystemuser(user.id).unwrap();
+                            toast.success("User deleted");
+                          } catch (err) {
+                            toast.error(err?.data?.message || err?.data?.error || "Delete failed");
+                          } finally {
+                            setBusyId(null);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -354,7 +324,9 @@ const UserPermissionSettings = () => {
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
-                      <p>No users found matching "{searchQuery}"</p>
+                      <p>
+                        No users found matching &quot;{searchQuery}&quot;
+                      </p>
                       <Button
                         variant="link"
                         onClick={() => setSearchQuery("")}
