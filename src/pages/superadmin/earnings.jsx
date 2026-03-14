@@ -1,21 +1,15 @@
 import React, { useMemo } from "react";
-import { DollarSign, TrendingUp, CreditCard, Globe2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Wallet, TrendingUp, CreditCard, Globe2, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import LineChartComponent from "@/components/charts/line-chart";
 import { useGetEarningsOverviewQuery } from "@/features/earnings/earningsApiSlice";
 import { motion } from "framer-motion";
+import { formatCurrency as formatBDTCurrency } from "@/utils/banglaFormatter";
 
 const SuperAdminEarningsPage = () => {
   const { data: earningsData, isLoading } = useGetEarningsOverviewQuery();
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+  // Format currency (BDT)
+  const formatCurrency = (amount) => formatBDTCurrency(amount, "en", "৳");
 
   // Helper for trend direction
   const getTrendDir = (val) => val >= 0 ? "up" : "down";
@@ -77,10 +71,10 @@ const SuperAdminEarningsPage = () => {
     return [
       {
         label: "Total Earnings (YTD)",
-        value: formatCurrency(kpiData.totalEarningsYTD),
+          value: formatCurrency(kpiData.totalEarningsYTD),
         trend: getTrendStr(kpiData.earningsDelta),
         trendDir: getTrendDir(kpiData.earningsDelta || 0),
-        icon: DollarSign,
+          icon: Wallet,
         bg: "bg-violet-50 dark:bg-violet-900/20",
         color: "text-violet-600 dark:text-violet-400",
         wave: "text-violet-500",
@@ -171,7 +165,7 @@ const SuperAdminEarningsPage = () => {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-xl bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400">
-              <DollarSign className="w-6 h-6" />
+              <Wallet className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               Earnings Overview
@@ -342,5 +336,4 @@ const SuperAdminEarningsPage = () => {
 };
 
 export default SuperAdminEarningsPage;
-
 

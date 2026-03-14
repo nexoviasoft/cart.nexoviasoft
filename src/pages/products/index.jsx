@@ -55,6 +55,7 @@ import {
   ProductsModals,
 } from "@/pages/products/components/list";
 import RestockModal from "@/pages/products/components/RestockModal";
+import { formatCurrency as formatBDTCurrency } from "@/utils/banglaFormatter";
 
 const ProductsPage = () => {
   const { t, i18n } = useTranslation();
@@ -228,11 +229,11 @@ const ProductsPage = () => {
       },
       {
         label: t("products.totalInventoryValueStat"),
-        value: new Intl.NumberFormat(i18n.language === "bn" ? "bn-BD" : "en-US", {
-          style: "currency",
-          currency: "USD",
-          maximumFractionDigits: 0,
-        }).format(totalValue),
+        value: formatBDTCurrency(
+          totalValue,
+          i18n.language === "bn" ? "bn" : "en",
+          "৳"
+        ),
         trend: `${valueTrend > 0 ? "+" : ""}${valueTrend.toFixed(1)}%`,
         trendDir: valueTrend >= 0 ? "up" : "down",
         trendColor: valueTrend >= 0 ? "green" : "red",

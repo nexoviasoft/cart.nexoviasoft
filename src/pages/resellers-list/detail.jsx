@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useParams, useLocation, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, User, Mail, Package, ShoppingCart, DollarSign } from "lucide-react";
+import { ArrowLeft, User, Mail, Package, ShoppingCart, Wallet } from "lucide-react";
 import { useGetAdminResellersQuery } from "@/features/reseller/resellerApiSlice";
 import { useGetOrdersQuery } from "@/features/order/orderApiSlice";
 
@@ -175,16 +175,16 @@ const ResellerDetailPage = () => {
             <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-[0.16em]">
               {t("resellers.earning") || "Total earning"}
             </p>
-            <DollarSign className="w-4 h-4 text-emerald-500" />
+            <Wallet className="w-4 h-4 text-emerald-500" />
           </div>
           <div>
             <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
-              {formatMoney(reseller?.totalEarning)}
+              ৳{formatMoney(reseller?.totalEarning)}
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {t("resellers.pendingPayout") || "Pending payout"}{" "}
               <span className="font-semibold text-slate-800 dark:text-slate-100">
-                {formatMoney(reseller?.pendingPayoutAmount)}
+                ৳{formatMoney(reseller?.pendingPayoutAmount)}
               </span>
             </p>
           </div>
@@ -279,4 +279,3 @@ const ResellerDetailPage = () => {
 };
 
 export default ResellerDetailPage;
-

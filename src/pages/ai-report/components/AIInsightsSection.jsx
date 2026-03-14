@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Sparkles, Download, Volume2, Square } from "lucide-react";
+import { Sparkles, Volume2, Square } from "lucide-react";
 import GlassCard from "./GlassCard";
 
 const AIInsightsSection = ({
@@ -15,7 +15,6 @@ const AIInsightsSection = ({
   handleTranslate,
   handleSpeak,
   handleStopSpeak,
-  handleDownloadReport,
 }) => {
   const { t } = useTranslation();
 
@@ -117,12 +116,6 @@ const AIInsightsSection = ({
                   </>
                 )}
 
-                <button
-                  onClick={handleDownloadReport}
-                  className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors text-sm font-medium flex items-center gap-2 ml-auto"
-                >
-                  <Download className="w-4 h-4" /> {t("aiReport.downloadPdf")}
-                </button>
               </div>
             </div>
           )}

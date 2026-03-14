@@ -40,7 +40,6 @@ const AiReportPage = () => {
     handleTranslate,
     handleSpeak,
     handleStopSpeak,
-    handleDownloadReport,
   } = reportText;
 
   const metrics = useAiReportMetrics(dashboardData, currentLang);
@@ -133,7 +132,6 @@ const AiReportPage = () => {
         handleTranslate={handleTranslate}
         handleSpeak={handleSpeak}
         handleStopSpeak={handleStopSpeak}
-        handleDownloadReport={handleDownloadReport}
       />
     </div>
   );

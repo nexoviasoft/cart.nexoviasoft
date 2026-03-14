@@ -175,7 +175,7 @@ const PriceCalculator = () => {
               >
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <DollarSign className="h-6 w-6 text-white" />
+                    <Banknote className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h4 className="font-bold text-lg">{t("redx.estimatedCost")}</h4>

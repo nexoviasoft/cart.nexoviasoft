@@ -28,7 +28,7 @@ const InventoryStats = ({ stats }) => {
       },
       {
         title: t("inventory.totalInventoryValue"),
-        value: stats?.totalValueFormatted ?? "$0.00",
+        value: stats?.totalValueFormatted ?? "৳0.00",
         icon: TrendingUp,
         color: "text-emerald-600",
         bg: "bg-emerald-50 dark:bg-emerald-900/20",
@@ -144,4 +144,3 @@ const InventoryStats = ({ stats }) => {
 };
 
 export default InventoryStats;
-

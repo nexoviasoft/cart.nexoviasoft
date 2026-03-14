@@ -4,7 +4,7 @@ import {
   Package,
   PackageCheck,
   Search,
-  DollarSign,
+  Wallet,
   RotateCcw,
   CreditCard,
   Building2,
@@ -50,7 +50,7 @@ const SteadfastPage = () => {
     {
       id: "balance",
       label: t("steadfast.balance", "Balance"),
-      icon: DollarSign,
+      icon: Wallet,
     },
     {
       id: "returns",
@@ -121,7 +121,7 @@ const SteadfastPage = () => {
         {/* Balance Card - Mini */}
         <div className="flex items-center gap-3 px-5 py-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-            <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">

@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  Printer,
   Edit,
   MapPin,
   Mail,
@@ -235,13 +234,6 @@ const OrderViewPage = () => {
           )}
           {!isReseller && (
             <>
-              <Button
-                variant="outline"
-                className="flex-1 lg:flex-none h-11 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                {t("common.print", "Print Invoice")}
-              </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate(`/orders/${id}/edit`)}

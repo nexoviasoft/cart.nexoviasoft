@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useGetBalanceQuery } from "@/features/steadfast/steadfastApiSlice";
-import { DollarSign, RefreshCw, Wallet, CreditCard } from "lucide-react";
+import { RefreshCw, Wallet, CreditCard } from "lucide-react";
 
 const CheckBalance = () => {
   const { t } = useTranslation();
@@ -32,7 +32,7 @@ const CheckBalance = () => {
           {/* Main Balance Card */}
           <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[24px] p-6 text-white shadow-lg shadow-emerald-500/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <DollarSign className="w-32 h-32 transform translate-x-8 -translate-y-8" />
+              <Wallet className="w-32 h-32 transform translate-x-8 -translate-y-8" />
             </div>
             
             <div className="relative z-10">

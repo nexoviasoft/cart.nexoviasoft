@@ -22,7 +22,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   TrendingUp,
-  DollarSign,
+  Wallet,
   MoreVertical,
   Plus,
 } from "lucide-react";
@@ -213,7 +213,7 @@ const PackageManagementPage = () => {
         value: formatMoney(avgPrice),
         trend: "+5%",
         trendDir: "up",
-        icon: DollarSign,
+        icon: Wallet,
         bg: "bg-blue-50 dark:bg-blue-900/20",
         color: "text-blue-600 dark:text-blue-400",
         wave: "text-blue-500",
