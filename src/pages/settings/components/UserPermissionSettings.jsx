@@ -26,6 +26,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useGetSystemusersQuery } from "@/features/systemuser/systemuserApiSlice";
+import { useGetCurrentUserQuery } from "@/features/auth/authApiSlice";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
@@ -38,6 +39,7 @@ import {
 
 const UserPermissionSettings = () => {
   const { data: apiData, isLoading } = useGetSystemusersQuery();
+  const { data: currentUser } = useGetCurrentUserQuery();
   const rawList = apiData?.data ?? apiData ?? [];
 
   // State for pagination and search
@@ -47,8 +49,12 @@ const UserPermissionSettings = () => {
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Process data
-  const users = Array.isArray(rawList)
-    ? rawList.map((u) => ({
+  const companyId = currentUser?.companyId;
+  const filteredRawList = Array.isArray(rawList)
+    ? (companyId ? rawList.filter((u) => u?.companyId === companyId) : rawList)
+    : [];
+  const users = Array.isArray(filteredRawList)
+    ? filteredRawList.map((u) => ({
         id: String(u.id),
         name: u.name ?? "—",
         email: u.email ?? "—",
