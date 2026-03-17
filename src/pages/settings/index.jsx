@@ -14,6 +14,7 @@ import {
   Truck, 
   CreditCard,
   KeyRound,
+  Mail,
   ChevronLeft
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ import UserPermissionSettings from "./components/UserPermissionSettings";
 import CourierSettings from "./components/CourierSettings";
 import BillingSettings from "./components/BillingSettings";
 import ProfileSettings from "./components/ProfileSettings";
+import SmtpSettings from "./components/SmtpSettings";
 
 const SettingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,6 +57,7 @@ const SettingsPage = () => {
     { id: "permissions", label: "Permissions", icon: ShieldCheck },
     { id: "courier", label: "Courier Integration", icon: Truck },
     { id: "billings", label: "Billings", icon: CreditCard },
+    { id: "smtp", label: "SMTP", icon: Mail },
   ];
 
   const renderContent = () => {
@@ -90,6 +93,8 @@ const SettingsPage = () => {
         return <CourierSettings user={currentUser} />;
       case "billings":
         return <BillingSettings user={currentUser} />;
+      case "smtp":
+        return <SmtpSettings />;
       default:
         return <ProfileSettings user={currentUser} />;
     }
