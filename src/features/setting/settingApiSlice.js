@@ -36,6 +36,16 @@ export const settingApiSlice = apiSlice.injectEndpoints({
       ],
     }),
 
+    upsertSmtp: builder.mutation({
+      query: (body) => ({
+        url: "/setting/smtp",
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json;charset=UTF-8" },
+      }),
+      invalidatesTags: [{ type: "settings", id: "LIST" }],
+    }),
+
     deleteSetting: builder.mutation({
       query: (id) => ({
         url: `/setting/${id}`,
@@ -51,5 +61,6 @@ export const {
   useGetSettingQuery,
   useCreateSettingMutation,
   useUpdateSettingMutation,
+  useUpsertSmtpMutation,
   useDeleteSettingMutation,
 } = settingApiSlice;

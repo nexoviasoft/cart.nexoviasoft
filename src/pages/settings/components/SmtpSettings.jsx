@@ -10,12 +10,12 @@ import { Label } from "@/components/ui/label";
 
 import {
   useGetSettingsQuery,
-  useUpdateSettingMutation,
+  useUpsertSmtpMutation,
 } from "@/features/setting/settingApiSlice";
 
 const SmtpSettings = () => {
   const { data: settings = [], isLoading } = useGetSettingsQuery();
-  const [updateSetting, { isLoading: isSaving }] = useUpdateSettingMutation();
+  const [upsertSmtp, { isLoading: isSaving }] = useUpsertSmtpMutation();
 
   const firstSetting = settings?.[0] ?? null;
 
@@ -36,13 +36,8 @@ const SmtpSettings = () => {
   }, [firstSetting, reset]);
 
   const onSubmit = async (data) => {
-    if (!firstSetting?.id) {
-      toast.error("Settings not found. Please create company settings first.");
-      return;
-    }
     try {
-      await updateSetting({
-        id: firstSetting.id,
+      await upsertSmtp({
         smtpUser: data.smtpUser?.trim() || null,
         smtpPass: data.smtpPass || null,
       }).unwrap();
