@@ -13,6 +13,7 @@ import BdtIcon from "@/components/icons/BdtIcon";
 import { useGetOverviewQuery } from "@/features/overview/overviewApiSlice";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import SmtpSettings from "@/pages/settings/components/SmtpSettings";
 
 const SuperAdminOverviewPage = () => {
   const { data: overviewData, isLoading } = useGetOverviewQuery();
@@ -357,6 +358,10 @@ const SuperAdminOverviewPage = () => {
             </Link>
           </div>
         </section>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <SmtpSettings />
       </motion.div>
     </motion.div>
   );
