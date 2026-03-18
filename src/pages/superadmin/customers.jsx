@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import ReusableTable from "@/components/table/reusable-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +24,14 @@ import {
   Search,
   MoreHorizontal,
   Plus,
+  RotateCcw,
 } from "lucide-react";
 import {
   useGetSystemusersQuery,
   useDeleteSystemuserMutation,
+  useGetTrashedSystemusersQuery,
+  useRestoreSystemuserMutation,
+  useDeleteSystemuserPermanentMutation,
 } from "@/features/systemuser/systemuserApiSlice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -44,7 +49,15 @@ const SuperAdminCustomersPage = () => {
   const { data: users = [], isLoading } = useGetSystemusersQuery();
   const [deleteSystemuser, { isLoading: isDeleting }] =
     useDeleteSystemuserMutation();
+  const { data: trashedUsers = [], isLoading: isTrashLoading } =
+    useGetTrashedSystemusersQuery();
+  const [restoreSystemuser, { isLoading: isRestoring }] =
+    useRestoreSystemuserMutation();
+  const [deletePermanent, { isLoading: isPermanentDeleting }] =
+    useDeleteSystemuserPermanentMutation();
   const [userToDelete, setUserToDelete] = useState(null);
+  const [userToRestore, setUserToRestore] = useState(null);
+  const [userToPermanentDelete, setUserToPermanentDelete] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Calculate Stats
@@ -115,8 +128,14 @@ const SuperAdminCustomersPage = () => {
 
   const confirmDelete = async () => {
     if (userToDelete) {
-      await deleteSystemuser(userToDelete.id);
-      setUserToDelete(null);
+      try {
+        await deleteSystemuser(userToDelete.id).unwrap();
+        toast.success("User moved to trash");
+      } catch (err) {
+        toast.error(err?.data?.message || err?.data?.error || "Delete failed");
+      } finally {
+        setUserToDelete(null);
+      }
     }
   };
 
@@ -143,6 +162,94 @@ const SuperAdminCustomersPage = () => {
     ],
     [],
   );
+
+  const trashedHeaders = useMemo(
+    () => [
+      { header: "Customer Info", field: "name" },
+      { header: "Company", field: "companyName" },
+      { header: "Deleted At", field: "deletedAt" },
+      { header: "Actions", field: "actions" },
+    ],
+    [],
+  );
+
+  const trashedTableData = useMemo(
+    () =>
+      (trashedUsers || []).map((u) => ({
+        name: (
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-900 dark:text-slate-100">
+              {u.name ?? "-"}
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {u.email ?? "-"}
+            </span>
+          </div>
+        ),
+        companyName: (
+          <div className="flex flex-col">
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              {u.companyName ?? "-"}
+            </span>
+            <span className="text-xs font-mono text-slate-400">
+              {u.companyId ?? "-"}
+            </span>
+          </div>
+        ),
+        deletedAt: (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {u.deletedAt ? new Date(u.deletedAt).toLocaleString() : "-"}
+          </span>
+        ),
+        actions: (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => setUserToRestore(u)}
+              className="h-8 rounded-lg"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" /> Restore
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setUserToPermanentDelete(u)}
+              className="h-8 rounded-lg"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
+            </Button>
+          </div>
+        ),
+      })),
+    [trashedUsers],
+  );
+
+  const confirmRestore = async () => {
+    if (userToRestore) {
+      try {
+        await restoreSystemuser({ id: userToRestore.id }).unwrap();
+        toast.success("User restored");
+      } catch (err) {
+        toast.error(err?.data?.message || err?.data?.error || "Restore failed");
+      } finally {
+        setUserToRestore(null);
+      }
+    }
+  };
+
+  const confirmPermanentDelete = async () => {
+    if (userToPermanentDelete) {
+      try {
+        await deletePermanent(userToPermanentDelete.id).unwrap();
+        toast.success("User permanently deleted");
+      } catch (err) {
+        toast.error(
+          err?.data?.message || err?.data?.error || "Permanent delete failed",
+        );
+      } finally {
+        setUserToPermanentDelete(null);
+      }
+    }
+  };
 
   const tableData = useMemo(
     () =>
@@ -395,6 +502,38 @@ const SuperAdminCustomersPage = () => {
         </div>
       </motion.div>
 
+      {/* Trash table */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[24px] md:rounded-[32px] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/20 overflow-hidden"
+      >
+        <div className="px-6 py-4 md:px-8 md:py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              Trash
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400">
+                {trashedUsers.length || 0}
+              </span>
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Recently deleted customers. Restore if removed by mistake.
+            </p>
+          </div>
+        </div>
+        <div className="p-[5px] px-3 md:px-6 pb-5">
+          <ReusableTable
+            data={trashedTableData}
+            headers={trashedHeaders}
+            py="py-4 md:py-5"
+            total={trashedTableData.length}
+            isLoading={isTrashLoading}
+            searchable={false}
+            headerClassName="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 pl-6 md:pl-8"
+            rowClassName="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-50 dark:border-slate-800/50 last:border-0 pl-6 md:pl-8"
+          />
+        </div>
+      </motion.div>
+
       <Dialog
         open={!!userToDelete}
         onOpenChange={(open) => !open && setUserToDelete(null)}
@@ -432,6 +571,90 @@ const SuperAdminCustomersPage = () => {
                 className="flex-1 rounded-xl h-12 bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-500/20 font-bold"
               >
                 {isDeleting ? "Deleting..." : "Yes, Delete"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!userToRestore}
+        onOpenChange={(open) => !open && setUserToRestore(null)}
+      >
+        <DialogContent className="sm:max-w-[425px] rounded-[32px] p-0 overflow-hidden border-0 shadow-2xl">
+          <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-8 text-white text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+            <div className="mx-auto w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-inner border border-white/10">
+              <RotateCcw className="w-8 h-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold relative z-10">
+              Restore Customer?
+            </DialogTitle>
+            <DialogDescription className="text-emerald-100 mt-2 relative z-10 text-base">
+              This will restore{" "}
+              <span className="font-bold bg-white/10 px-2 py-0.5 rounded text-white">
+                {userToRestore?.email}
+              </span>{" "}
+              and make the account active again.
+            </DialogDescription>
+          </div>
+          <div className="p-8 bg-white dark:bg-[#1a1f26]">
+            <DialogFooter className="gap-3 sm:justify-center flex-col sm:flex-row w-full">
+              <Button
+                variant="outline"
+                onClick={() => setUserToRestore(null)}
+                className="flex-1 rounded-xl h-12 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmRestore}
+                disabled={isRestoring}
+                className="flex-1 rounded-xl h-12 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 font-bold"
+              >
+                {isRestoring ? "Restoring..." : "Yes, Restore"}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={!!userToPermanentDelete}
+        onOpenChange={(open) => !open && setUserToPermanentDelete(null)}
+      >
+        <DialogContent className="sm:max-w-[425px] rounded-[32px] p-0 overflow-hidden border-0 shadow-2xl">
+          <div className="bg-gradient-to-br from-rose-600 to-red-700 p-8 text-white text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+            <div className="mx-auto w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-inner border border-white/10">
+              <Trash2 className="w-8 h-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold relative z-10">
+              Permanently Delete?
+            </DialogTitle>
+            <DialogDescription className="text-rose-100 mt-2 relative z-10 text-base">
+              This will permanently delete{" "}
+              <span className="font-bold bg-white/10 px-2 py-0.5 rounded text-white">
+                {userToPermanentDelete?.email}
+              </span>{" "}
+              and cannot be undone.
+            </DialogDescription>
+          </div>
+          <div className="p-8 bg-white dark:bg-[#1a1f26]">
+            <DialogFooter className="gap-3 sm:justify-center flex-col sm:flex-row w-full">
+              <Button
+                variant="outline"
+                onClick={() => setUserToPermanentDelete(null)}
+                className="flex-1 rounded-xl h-12 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmPermanentDelete}
+                disabled={isPermanentDeleting}
+                className="flex-1 rounded-xl h-12 bg-rose-700 hover:bg-rose-800 shadow-lg shadow-rose-500/20 font-bold"
+              >
+                {isPermanentDeleting ? "Deleting..." : "Yes, Permanently Delete"}
               </Button>
             </DialogFooter>
           </div>

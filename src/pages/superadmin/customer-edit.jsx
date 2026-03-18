@@ -279,12 +279,12 @@ const SuperAdminCustomerEditPage = () => {
       payload.password = data.password;
     }
 
-    const res = await updateSystemuser(payload);
-    if (res?.data) {
+    try {
+      await updateSystemuser(payload).unwrap();
       toast.success("Customer updated successfully");
       navigate(`/superadmin/customers/${id}`);
-    } else {
-      toast.error(res?.error?.data?.message || "Failed to update customer");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update customer");
     }
   };
 

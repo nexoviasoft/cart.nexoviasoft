@@ -57,7 +57,7 @@ export const generateSaleInvoicePDF = (invoice, companyInfo = {}) => {
     });
   };
 
-  const companyName = companyInfo.companyName || "InnowaveCart";
+  const companyName = companyInfo.companyName || "NexoviaSoft";
   const branchLocation = companyInfo.branchLocation || "";
   const companyPhone = companyInfo.phone || "";
   const companyEmail = companyInfo.email || "";

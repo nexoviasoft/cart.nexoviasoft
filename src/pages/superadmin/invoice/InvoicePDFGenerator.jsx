@@ -44,7 +44,7 @@ export const generateInvoicePDF = (invoice) => {
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setCharSpace(0); // Ensure no character spacing
-  doc.text("InnowaveCart", margin + 5, margin + 8);
+  doc.text("NexoviaSoft", margin + 5, margin + 8);
 
   // Invoice Title (Top Right)
   doc.setTextColor(...secondaryColor);

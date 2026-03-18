@@ -9,7 +9,7 @@
  */
 
 // Get API base URL from environment variable with fallback
-export const API_BASE_URL = "https://api.fiberace.shop";
+export const API_BASE_URL = "https://cart-api-nexoviasoft.vercel.app";
   // https://e-api-omega.vercel.app
 // https://squadcart-backend.up.railway.app
 // Export other API-related configs if needed

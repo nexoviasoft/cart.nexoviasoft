@@ -54,6 +54,35 @@ export const systemuserApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "systemuser", id: "LIST" }],
     }),
 
+    // Get trashed system users
+    getTrashedSystemusers: builder.query({
+      query: (params) => ({ url: "/systemuser/trash", method: "GET", params }),
+      transformResponse: (res) => res,
+      providesTags: [{ type: "systemuser", id: "TRASH" }],
+    }),
+
+    // Restore system user from trash
+    restoreSystemuser: builder.mutation({
+      query: ({ id, params }) => ({
+        url: `/systemuser/${id}/restore`,
+        method: "PATCH",
+        ...(params ? { params } : {}),
+      }),
+      invalidatesTags: [
+        { type: "systemuser", id: "LIST" },
+        { type: "systemuser", id: "TRASH" },
+      ],
+    }),
+
+    // Permanent delete system user from trash
+    deleteSystemuserPermanent: builder.mutation({
+      query: (id) => ({ url: `/systemuser/${id}/permanent`, method: "DELETE" }),
+      invalidatesTags: [
+        { type: "systemuser", id: "LIST" },
+        { type: "systemuser", id: "TRASH" },
+      ],
+    }),
+
     // Systemuser login - uses shared auth/login endpoint
     loginSystemuser: builder.mutation({
       query: (body) => ({
@@ -146,6 +175,9 @@ export const {
   useCreateSystemuserMutation,
   useUpdateSystemuserMutation,
   useDeleteSystemuserMutation,
+  useGetTrashedSystemusersQuery,
+  useRestoreSystemuserMutation,
+  useDeleteSystemuserPermanentMutation,
   useLoginSystemuserMutation,
   useRevertPackageMutation,
   useAssignPermissionsMutation,
