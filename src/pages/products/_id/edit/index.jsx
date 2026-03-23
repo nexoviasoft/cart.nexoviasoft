@@ -117,9 +117,11 @@ export default function ProductEditPage() {
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const { uploadImage, isUploading } = useImageUpload();
 
-  const typeOptions = useMemo(() => ["tshirt", "shirt", "shoes", "pant", "coqizitem"], []);
-  const sizeOptionsMap = useMemo(
-    () => ({
+  const [dynamicTypeOptions, setDynamicTypeOptions] = useState(["tshirt", "shirt", "shoes", "pant", "coqizitem"]);
+  const [isAddingType, setIsAddingType] = useState(false);
+  const [newTypeValue, setNewTypeValue] = useState("");
+  
+  const [dynamicSizeOptionsMap, setDynamicSizeOptionsMap] = useState({
       tshirt: [
         { value: "XS", label: "XS" },
         { value: "S", label: "S" },
@@ -164,9 +166,37 @@ export default function ProductEditPage() {
         { value: "500gm", label: "500gm" },
         { value: "1kg", label: "1kg" },
       ],
-    }),
-    [],
-  );
+  });
+
+  const handleAddCustomType = useCallback(() => {
+    const val = newTypeValue.trim().toLowerCase();
+    if (val && !dynamicTypeOptions.includes(val)) {
+      setDynamicTypeOptions((prev) => [...prev, val]);
+      setSelectedType(val);
+      setNewTypeValue("");
+      setIsAddingType(false);
+    }
+  }, [newTypeValue, dynamicTypeOptions]);
+
+  const handleAddCustomSize = useCallback(() => {
+    const val = newSizeValue.trim();
+    if (val && selectedType) {
+      setDynamicSizeOptionsMap((prev) => {
+        const existing = prev[selectedType] || [];
+        if (existing.find((s) => s.value === val)) return prev;
+        return {
+          ...prev,
+          [selectedType]: [...existing, { value: val, label: val }],
+        };
+      });
+      setSelectedSizes((prev) => {
+        if (prev.includes(val)) return prev;
+        return [...prev, val];
+      });
+      setNewSizeValue("");
+      setIsAddingSize(false);
+    }
+  }, [newSizeValue, selectedType]);
 
   const categoryOptions = useMemo(
     () => categories.map((cat) => ({ label: cat.name, value: cat.id })),
@@ -207,20 +237,29 @@ export default function ProductEditPage() {
       if (found) setCategoryOption({ label: found.name, value: found.id });
     }
 
+    let typeToSelect = "";
     if (product.types) {
       if (Array.isArray(product.types) && product.types.length > 0) {
-        setSelectedType(product.types[0]);
+        typeToSelect = product.types[0];
       } else if (typeof product.types === "string") {
         try {
           const parsed = JSON.parse(product.types);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setSelectedType(parsed[0]);
+            typeToSelect = parsed[0];
           } else {
-            setSelectedType(product.types);
+            typeToSelect = product.types;
           }
         } catch {
-          setSelectedType(product.types);
+          typeToSelect = product.types;
         }
+      }
+
+      if (typeToSelect) {
+        setSelectedType(typeToSelect);
+        setDynamicTypeOptions((prev) => {
+          if (!prev.includes(typeToSelect)) return [...prev, typeToSelect];
+          return prev;
+        });
       }
     }
 
@@ -230,7 +269,22 @@ export default function ProductEditPage() {
         ...new Set([...defaultSizes, ...product.sizes.map(String)]),
       ];
       setSizes(sizeList);
-      setSelectedSizes(product.sizes.map(String));
+      
+      const selectedSizesStrs = product.sizes.map(String);
+      setSelectedSizes(selectedSizesStrs);
+      
+      if (typeToSelect) {
+        setDynamicSizeOptionsMap((prev) => {
+          const existing = prev[typeToSelect] || [];
+          const newMap = [...existing];
+          selectedSizesStrs.forEach((s) => {
+            if (!newMap.find((ex) => ex.value === s)) {
+              newMap.push({ value: s, label: s });
+            }
+          });
+          return { ...prev, [typeToSelect]: newMap };
+        });
+      }
     }
 
     if (product.variants?.length) {
@@ -416,21 +470,52 @@ export default function ProductEditPage() {
             />
 
             <div className="space-y-4 rounded-2xl bg-white dark:bg-[#1a1f26] border border-gray-100 dark:border-gray-800 p-6">
-              <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
                 <h3 className="text-sm font-semibold text-black/80 dark:text-white/80 uppercase tracking-wide">
                   Product Types
                 </h3>
+                <Button
+                  type="button"
+                  onClick={() => setIsAddingType(!isAddingType)}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                >
+                  {isAddingType ? t("common.cancel", "Cancel") : t("products.addCustomType", "+ Custom Type")}
+                </Button>
               </div>
+
+              {isAddingType && (
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newTypeValue}
+                    onChange={(e) => setNewTypeValue(e.target.value)}
+                    placeholder="Enter custom type"
+                    className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:focus-visible:ring-slate-300"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomType();
+                      }
+                    }}
+                  />
+                  <Button type="button" size="sm" onClick={handleAddCustomType}>
+                    {t("common.add", "Add")}
+                  </Button>
+                </div>
+              )}
+
               <RadioGroup value={selectedType} onValueChange={(val) => {
                 setSelectedType(val);
                 setSelectedSizes([]);
               }} className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {typeOptions.map((opt) => {
+                {dynamicTypeOptions.map((opt) => {
                   const id = `type-${opt}`;
                   return (
                     <div key={opt} className="flex items-center gap-2 p-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-black/20">
                       <RadioGroupItem value={opt} id={id} />
-                      <label htmlFor={id} className="text-sm cursor-pointer">
+                      <label htmlFor={id} className="text-sm cursor-pointer truncate">
                         {opt.charAt(0).toUpperCase() + opt.slice(1)}
                       </label>
                     </div>
@@ -441,13 +526,44 @@ export default function ProductEditPage() {
 
             {selectedType && (
               <div className="space-y-4 rounded-2xl bg-white dark:bg-[#1a1f26] border border-gray-100 dark:border-gray-800 p-6">
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
                   <h3 className="text-sm font-semibold text-black/80 dark:text-white/80 uppercase tracking-wide">
                     Size Options
                   </h3>
+                  <Button
+                    type="button"
+                    onClick={() => setIsAddingSize(!isAddingSize)}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                  >
+                    {isAddingSize ? t("common.cancel", "Cancel") : t("products.addCustomSize", "+ Custom Size")}
+                  </Button>
                 </div>
+
+                {isAddingSize && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={newSizeValue}
+                      onChange={(e) => setNewSizeValue(e.target.value)}
+                      placeholder="Enter custom size"
+                      className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:focus-visible:ring-slate-300"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomSize();
+                        }
+                      }}
+                    />
+                    <Button type="button" size="sm" onClick={handleAddCustomSize}>
+                      {t("common.add", "Add")}
+                    </Button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {(sizeOptionsMap[selectedType] || []).map((opt) => {
+                  {(dynamicSizeOptionsMap[selectedType] || []).map((opt) => {
                     const checked = selectedSizes.includes(opt.value);
                     return (
                       <div
@@ -469,6 +585,11 @@ export default function ProductEditPage() {
                       </div>
                     );
                   })}
+                  {(dynamicSizeOptionsMap[selectedType] || []).length === 0 && !isAddingSize && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 col-span-full">
+                      No sizes available. Click + Custom Size to add.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

@@ -10,6 +10,7 @@ import { useGetCategoriesQuery } from "@/features/category/categoryApiSlice";
 import useImageUpload from "@/hooks/useImageUpload";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   ProductFormHeader,
@@ -109,9 +110,11 @@ function CreateProductPage() {
   const [newVariantName, setNewVariantName] = useState("");
   const [newVariantColor, setNewVariantColor] = useState("#6366f1");
   const [selectedType, setSelectedType] = useState("");
-  const typeOptions = useMemo(() => ["tshirt", "shirt", "shoes", "pant", "coqizitem"], []);
-  const sizeOptionsMap = useMemo(
-    () => ({
+  const [dynamicTypeOptions, setDynamicTypeOptions] = useState(["tshirt", "shirt", "shoes", "pant", "coqizitem"]);
+  const [isAddingType, setIsAddingType] = useState(false);
+  const [newTypeValue, setNewTypeValue] = useState("");
+  
+  const [dynamicSizeOptionsMap, setDynamicSizeOptionsMap] = useState({
       tshirt: [
         { value: "XS", label: "XS" },
         { value: "S", label: "S" },
@@ -156,9 +159,37 @@ function CreateProductPage() {
         { value: "500gm", label: "500gm" },
         { value: "1kg", label: "1kg" },
       ],
-    }),
-    [],
-  );
+  });
+
+  const handleAddCustomType = useCallback(() => {
+    const val = newTypeValue.trim().toLowerCase();
+    if (val && !dynamicTypeOptions.includes(val)) {
+      setDynamicTypeOptions((prev) => [...prev, val]);
+      setSelectedType(val);
+      setNewTypeValue("");
+      setIsAddingType(false);
+    }
+  }, [newTypeValue, dynamicTypeOptions]);
+
+  const handleAddCustomSize = useCallback(() => {
+    const val = newSizeValue.trim();
+    if (val && selectedType) {
+      setDynamicSizeOptionsMap((prev) => {
+        const existing = prev[selectedType] || [];
+        if (existing.find((s) => s.value === val)) return prev;
+        return {
+          ...prev,
+          [selectedType]: [...existing, { value: val, label: val }],
+        };
+      });
+      setSelectedSizes((prev) => {
+        if (prev.includes(val)) return prev;
+        return [...prev, val];
+      });
+      setNewSizeValue("");
+      setIsAddingSize(false);
+    }
+  }, [newSizeValue, selectedType]);
 
   useEffect(() => {
     setSelectedSizes([]);
@@ -435,18 +466,52 @@ function CreateProductPage() {
             />
 
             <div className="space-y-4 rounded-2xl bg-white dark:bg-[#1a1f26] border border-gray-100 dark:border-gray-800 p-6">
-              <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
                 <h3 className="text-sm font-semibold text-black/80 dark:text-white/80 uppercase tracking-wide">
                   Product Types
                 </h3>
+                <Button
+                  type="button"
+                  onClick={() => setIsAddingType(!isAddingType)}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                >
+                  {isAddingType ? t("common.cancel", "Cancel") : t("products.addCustomType", "+ Custom Type")}
+                </Button>
               </div>
-              <RadioGroup value={selectedType} onValueChange={setSelectedType} className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {typeOptions.map((opt) => {
+
+              {isAddingType && (
+                <div className="flex items-center gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newTypeValue}
+                    onChange={(e) => setNewTypeValue(e.target.value)}
+                    placeholder="Enter custom type"
+                    className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:focus-visible:ring-slate-300"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomType();
+                      }
+                    }}
+                  />
+                  <Button type="button" size="sm" onClick={handleAddCustomType}>
+                    {t("common.add", "Add")}
+                  </Button>
+                </div>
+              )}
+
+              <RadioGroup value={selectedType} onValueChange={(val) => {
+                setSelectedType(val);
+                setSelectedSizes([]);
+              }} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {dynamicTypeOptions.map((opt) => {
                   const id = `type-${opt}`;
                   return (
                     <div key={opt} className="flex items-center gap-2 p-2 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-black/20">
                       <RadioGroupItem value={opt} id={id} />
-                      <label htmlFor={id} className="text-sm cursor-pointer">
+                      <label htmlFor={id} className="text-sm cursor-pointer truncate">
                         {opt.charAt(0).toUpperCase() + opt.slice(1)}
                       </label>
                     </div>
@@ -457,13 +522,44 @@ function CreateProductPage() {
 
             {selectedType && (
               <div className="space-y-4 rounded-2xl bg-white dark:bg-[#1a1f26] border border-gray-100 dark:border-gray-800 p-6">
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
                   <h3 className="text-sm font-semibold text-black/80 dark:text-white/80 uppercase tracking-wide">
                     Size Options
                   </h3>
+                  <Button
+                    type="button"
+                    onClick={() => setIsAddingSize(!isAddingSize)}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                  >
+                    {isAddingSize ? t("common.cancel", "Cancel") : t("products.addCustomSize", "+ Custom Size")}
+                  </Button>
                 </div>
+
+                {isAddingSize && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <input
+                      type="text"
+                      value={newSizeValue}
+                      onChange={(e) => setNewSizeValue(e.target.value)}
+                      placeholder="Enter custom size"
+                      className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:focus-visible:ring-slate-300"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomSize();
+                        }
+                      }}
+                    />
+                    <Button type="button" size="sm" onClick={handleAddCustomSize}>
+                      {t("common.add", "Add")}
+                    </Button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {(sizeOptionsMap[selectedType] || []).map((opt) => {
+                  {(dynamicSizeOptionsMap[selectedType] || []).map((opt) => {
                     const checked = selectedSizes.includes(opt.value);
                     return (
                       <div
@@ -485,6 +581,11 @@ function CreateProductPage() {
                       </div>
                     );
                   })}
+                  {(dynamicSizeOptionsMap[selectedType] || []).length === 0 && !isAddingSize && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 col-span-full">
+                      No sizes available. Click + Custom Size to add.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
