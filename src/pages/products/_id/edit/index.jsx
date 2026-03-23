@@ -207,8 +207,21 @@ export default function ProductEditPage() {
       if (found) setCategoryOption({ label: found.name, value: found.id });
     }
 
-    if (product.types?.length) {
-      setSelectedType(product.types[0] || "");
+    if (product.types) {
+      if (Array.isArray(product.types) && product.types.length > 0) {
+        setSelectedType(product.types[0]);
+      } else if (typeof product.types === "string") {
+        try {
+          const parsed = JSON.parse(product.types);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedType(parsed[0]);
+          } else {
+            setSelectedType(product.types);
+          }
+        } catch {
+          setSelectedType(product.types);
+        }
+      }
     }
 
     if (product.sizes?.length) {
@@ -476,7 +489,7 @@ export default function ProductEditPage() {
               isUpdating={isUpdating}
               isUploading={isUploading}
               isValid={isValid}
-              submitLabel={t("productForm.publish")}
+              submitLabel={t("update")}
               savingLabel={t("productForm.saving")}
             />
           </div>
