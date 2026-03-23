@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Users,
   Headset,
@@ -7,7 +7,6 @@ import {
   Activity,
   Star,
   Shield,
-  Clock,
 } from "lucide-react";
 import BdtIcon from "@/components/icons/BdtIcon";
 import { useGetOverviewQuery } from "@/features/overview/overviewApiSlice";
@@ -16,7 +15,7 @@ import { motion } from "framer-motion";
 import SmtpSettings from "@/pages/settings/components/SmtpSettings";
 
 const SuperAdminOverviewPage = () => {
-  const { data: overviewData, isLoading } = useGetOverviewQuery();
+  const { data: overviewData } = useGetOverviewQuery();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -361,7 +360,7 @@ const SuperAdminOverviewPage = () => {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <SmtpSettings />
+        <SmtpSettings scope="superadmin" />
       </motion.div>
     </motion.div>
   );

@@ -10,7 +10,7 @@ import { useUpdateSystemuserMutation } from "@/features/systemuser/systemuserApi
 const GeneralSettings = ({ user: userFromApi }) => {
   const authUser = useSelector((state) => state.auth.user);
   const user = userFromApi ?? authUser ?? null;
-  const userId = authUser?.userId ?? authUser?.sub ?? authUser?.id;
+  const userId = user?.id || user?._id || authUser?.userId || authUser?.sub || authUser?.id || authUser?._id;
   const [updateSystemuser, { isLoading: isUpdating }] = useUpdateSystemuserMutation();
 
   const { register, handleSubmit, reset } = useForm({

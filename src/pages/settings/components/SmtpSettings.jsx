@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -10,14 +10,28 @@ import { Label } from "@/components/ui/label";
 
 import {
   useGetSettingsQuery,
+  useGetSuperadminSmtpQuery,
   useUpsertSmtpMutation,
+  useUpsertSuperadminSmtpMutation,
 } from "@/features/setting/settingApiSlice";
 
-const SmtpSettings = () => {
-  const { data: settings = [], isLoading } = useGetSettingsQuery();
-  const [upsertSmtp, { isLoading: isSaving }] = useUpsertSmtpMutation();
+const SmtpSettings = ({ scope = "company" }) => {
+  const isSuperadminScope = scope === "superadmin";
 
-  const firstSetting = settings?.[0] ?? null;
+  const { data: settings = [], isLoading: isCompanyLoading } = useGetSettingsQuery(
+    undefined,
+    { skip: isSuperadminScope },
+  );
+  const { data: superadminSetting = null, isLoading: isSuperadminLoading } =
+    useGetSuperadminSmtpQuery(undefined, { skip: !isSuperadminScope });
+
+  const [upsertCompanySmtp, { isLoading: isCompanySaving }] = useUpsertSmtpMutation();
+  const [upsertSuperadminSmtp, { isLoading: isSuperadminSaving }] =
+    useUpsertSuperadminSmtpMutation();
+
+  const firstSetting = isSuperadminScope ? superadminSetting : (settings?.[0] ?? null);
+  const isLoading = isSuperadminScope ? isSuperadminLoading : isCompanyLoading;
+  const isSaving = isSuperadminScope ? isSuperadminSaving : isCompanySaving;
 
   const { register, handleSubmit, reset } = useForm({
     defaultValues: {
@@ -37,7 +51,8 @@ const SmtpSettings = () => {
 
   const onSubmit = async (data) => {
     try {
-      await upsertSmtp({
+      const upsert = isSuperadminScope ? upsertSuperadminSmtp : upsertCompanySmtp;
+      await upsert({
         smtpUser: data.smtpUser?.trim() || null,
         smtpPass: data.smtpPass || null,
       }).unwrap();
@@ -125,4 +140,3 @@ const SmtpSettings = () => {
 };
 
 export default SmtpSettings;
-

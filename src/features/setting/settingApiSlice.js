@@ -46,6 +46,22 @@ export const settingApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: [{ type: "settings", id: "LIST" }],
     }),
 
+    getSuperadminSmtp: builder.query({
+      query: () => ({ url: "/superadmin/setting/smtp", method: "GET" }),
+      transformResponse: (res) => res?.data ?? null,
+      providesTags: [{ type: "settings", id: "SUPERADMIN_SMTP" }],
+    }),
+
+    upsertSuperadminSmtp: builder.mutation({
+      query: (body) => ({
+        url: "/superadmin/setting/smtp",
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json;charset=UTF-8" },
+      }),
+      invalidatesTags: [{ type: "settings", id: "SUPERADMIN_SMTP" }],
+    }),
+
     deleteSetting: builder.mutation({
       query: (id) => ({
         url: `/setting/${id}`,
@@ -62,5 +78,7 @@ export const {
   useCreateSettingMutation,
   useUpdateSettingMutation,
   useUpsertSmtpMutation,
+  useGetSuperadminSmtpQuery,
+  useUpsertSuperadminSmtpMutation,
   useDeleteSettingMutation,
 } = settingApiSlice;

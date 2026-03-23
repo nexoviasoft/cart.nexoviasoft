@@ -24,8 +24,8 @@ const ProfileSettings = ({ user: userFromApi }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const authUser = useSelector((state) => state.auth.user);
-  const userId = authUser?.userId || authUser?.sub || authUser?.id;
   const user = userFromApi ?? authUser ?? null;
+  const userId = user?.id || user?._id || authUser?.userId || authUser?.sub || authUser?.id || authUser?._id;
 
   const [updateSystemuser, { isLoading: isUpdating }] =
     useUpdateSystemuserMutation();
