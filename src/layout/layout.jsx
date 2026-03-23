@@ -6,6 +6,7 @@ import { useGetCurrentUserQuery } from "@/features/auth/authApiSlice";
 import { useDispatch } from "react-redux";
 import { userDetailsFetched } from "@/features/auth/authSlice";
 import { useSearch } from "@/contexts/SearchContext";
+import Footer from "@/components/footer/footer";
 
 const Layout = () => {
   const dispatch = useDispatch();
@@ -40,9 +41,12 @@ const Layout = () => {
 
         {/* Page Content */}
         {!isSearching && (
-          <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden max-w-[1600px] w-full mx-auto">
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+          <div className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col overflow-x-hidden max-w-[1600px] w-full mx-auto">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out flex-1">
               <Outlet />
+            </div>
+            <div className="mt-auto pt-8">
+              <Footer />
             </div>
           </div>
         )}
