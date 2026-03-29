@@ -10,7 +10,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   DollarSign,
+  Download,
 } from "lucide-react";
+import { downloadInvoice } from "@/utils/downloadInvoice";
 import toast from "react-hot-toast";
 import {
   useGetCashSummaryQuery,
@@ -235,6 +237,13 @@ const IncomePage = () => {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => downloadInvoice(item, "income", authUser?.companyName ?? "My Company")}
+                          title="Download Invoice"
+                          className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={() => openEdit(item)}
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"

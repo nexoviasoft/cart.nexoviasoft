@@ -115,12 +115,12 @@ const DashboardPage = () => {
   const totalRevenue =
     dashboardData?.overviewMetrics?.totalRevenue != null
       ? Number(dashboardData.overviewMetrics.totalRevenue).toLocaleString(
-          "en-US",
-          {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          },
-        )
+        "en-US",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        },
+      )
       : "0.00";
 
   return (
@@ -176,11 +176,11 @@ const DashboardPage = () => {
           value={
             dashboardData?.overviewMetrics?.totalRevenue != null
               ? `BD Tk ${Number(
-                  dashboardData.overviewMetrics.totalRevenue,
-                ).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}`
+                dashboardData.overviewMetrics.totalRevenue,
+              ).toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`
               : "BD Tk 0.00"
           }
           change={dashboardData?.stats?.[0]?.delta ?? "0%"}
