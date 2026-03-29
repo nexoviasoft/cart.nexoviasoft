@@ -49,6 +49,9 @@ import {
   Plug,
   Settings2,
   Globe,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { FeaturePermission } from "@/constants/feature-permission";
 
@@ -188,6 +191,28 @@ export const navSections = [
         icon: FileText,
       },
       
+    ],
+  },
+  {
+    id: "my-cash",
+    title: "My Cash",
+    tKey: "nav.myCash",
+    icon: Wallet,
+    items: [
+      {
+        id: 20.1,
+        title: "Income",
+        tKey: "nav.income",
+        link: "/my-cash/income",
+        icon: TrendingUp,
+      },
+      {
+        id: 20.2,
+        title: "Expense",
+        tKey: "nav.expense",
+        link: "/my-cash/expense",
+        icon: TrendingDown,
+      },
     ],
   },
   {
@@ -368,7 +393,7 @@ export const navSections = [
         title: "Resellers",
         tKey: "nav.resellers",
         link: "/resellers",
-        permission: FeaturePermission.STAFF,
+        permission: FeaturePermission.RESELLER_MANAGEMENT,
         icon: Package,
       },
       {

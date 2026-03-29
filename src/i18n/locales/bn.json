@@ -179,7 +179,10 @@
     "settingsPreferences": "পছন্দসমূহ",
     "settingsAccount": "অ্যাকাউন্ট",
     "settingsBillings": "বিলিংস",
-    "settingsNotifications": "নোটিফিকেশন"
+    "settingsNotifications": "নোটিফিকেশন",
+    "myCash": "আমার ক্যাশ",
+    "income": "আয়",
+    "expense": "ব্যয়"
   },
   "search": {
     "placeholder": "অর্ডার, পণ্য, গ্রাহক খুঁজুন...",
@@ -274,6 +277,7 @@
     "totalSales": "মোট বিক্রয়",
     "totalRevenue": "মোট আয়",
     "totalCustomers": "মোট ক্রেতা",
+    "lowStockProducts": "কম স্টক পণ্য",
     "overviewTagline1": "আপনার স্টোরের পারফরম্যান্সের সারসংক্ষেপ",
     "overviewTagline2": "রিয়েল-টাইম অ্যানালিটিক্স ও ইনসাইট",
     "overviewTagline3": "সহজেই অর্ডার ও ইনভেন্টরি ম্যানেজ করুন",

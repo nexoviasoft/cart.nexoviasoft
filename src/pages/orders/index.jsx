@@ -16,6 +16,8 @@ import {
   useRefundOrderMutation,
 } from "@/features/order/orderApiSlice";
 import { useCreateOrderMutation as useSteadfastCreateOrderMutation } from "@/features/steadfast/steadfastApiSlice";
+import { useCreateOrderMutation as usePathaoCreateOrderMutation } from "@/features/pathao/pathaoApiSlice";
+import { useCreateParcelMutation as useRedxCreateParcelMutation } from "@/features/redx/redxApiSlice";
 import { hasPermission, FeaturePermission } from "@/constants/feature-permission";
 import DeleteModal from "@/components/modals/DeleteModal";
 import OrdersHeader from "./components/OrdersHeader";
@@ -29,6 +31,7 @@ import CancelOrderModal from "./components/CancelOrderModal";
 import RefundOrderModal from "./components/RefundOrderModal";
 import PartialPaymentModal from "./components/PartialPaymentModal";
 import BarcodeScanModal from "./components/BarcodeScanModal";
+import FraudCheckModal from "./components/FraudCheckModal";
 import useOrdersFilters from "./hooks/useOrdersFilters";
 import useOrdersTable from "./hooks/useOrdersTable";
 
@@ -53,6 +56,8 @@ const OrdersPage = () => {
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
   const [refundOrder, { isLoading: isRefunding }] = useRefundOrderMutation();
   const [steadfastCreateOrder] = useSteadfastCreateOrderMutation();
+  const [pathaoCreateOrder] = usePathaoCreateOrderMutation();
+  const [redxCreateParcel] = useRedxCreateParcelMutation();
 
   // Modal states
   const [deleteModal, setDeleteModal] = useState({
@@ -99,7 +104,10 @@ const OrdersPage = () => {
   const [exportModal, setExportModal] = useState({
     isOpen: false,
     order: null,
-    providerLabel: "",
+  });
+  const [fraudCheckModal, setFraudCheckModal] = useState({
+    isOpen: false,
+    order: null,
   });
 
   // Filter states
@@ -188,6 +196,7 @@ const OrdersPage = () => {
 
   const { headers, tableData } = useOrdersTable(
     filteredOrders,
+    orders,        // full list for new-vs-returning customer detection
     getStatusLabel,
     setProcessModal,
     handleShipModalOpen,
@@ -200,59 +209,40 @@ const OrdersPage = () => {
       const canSteadfast = hasPermission(authUser, FeaturePermission.STEARDFAST) || hasPermission(authUser, FeaturePermission.STEADFAST_COURIER);
       const canPathao = hasPermission(authUser, FeaturePermission.PATHAO) || hasPermission(authUser, FeaturePermission.PATHAO_COURIER);
       const canRedx = hasPermission(authUser, FeaturePermission.REDX) || hasPermission(authUser, FeaturePermission.REDX_COURIER);
-      if (canSteadfast) {
-        setExportModal({
-          isOpen: true,
-          order,
-          providerLabel: "Steadfast",
-        });
+      if (!canSteadfast && !canPathao && !canRedx) {
+        toast.error(t("common.failed"));
         return;
       }
-      if (canPathao) {
-        setExportModal({
-          isOpen: true,
-          order,
-          providerLabel: "Pathao",
-        });
-        return;
-      }
-      if (canRedx) {
-        setExportModal({
-          isOpen: true,
-          order,
-          providerLabel: "RedX",
-        });
-        return;
-      }
-      toast.error(t("common.failed"));
+      setExportModal({ isOpen: true, order });
     },
+    setFraudCheckModal,
   );
 
+  // Build the list of courier keys available to the logged-in user
+  const availableCouriers = useMemo(() => {
+    const list = [];
+    if (hasPermission(authUser, FeaturePermission.STEARDFAST) || hasPermission(authUser, FeaturePermission.STEADFAST_COURIER)) list.push("steadfast");
+    if (hasPermission(authUser, FeaturePermission.PATHAO) || hasPermission(authUser, FeaturePermission.PATHAO_COURIER)) list.push("pathao");
+    if (hasPermission(authUser, FeaturePermission.REDX) || hasPermission(authUser, FeaturePermission.REDX_COURIER)) list.push("redx");
+    return list;
+  }, [authUser]);
+
   const performExportCourier = useCallback(
-    async (order) => {
-      const canSteadfast = hasPermission(authUser, FeaturePermission.STEARDFAST) || hasPermission(authUser, FeaturePermission.STEADFAST_COURIER);
-      const canPathao = hasPermission(authUser, FeaturePermission.PATHAO) || hasPermission(authUser, FeaturePermission.PATHAO_COURIER);
-      const canRedx = hasPermission(authUser, FeaturePermission.REDX) || hasPermission(authUser, FeaturePermission.REDX_COURIER);
-      if (canSteadfast) {
+    async (order, courierKey) => {
+      const items = order.orderItems || order.items || [];
+      const itemDescription =
+        items.map((item) => item.productName || item.name || item.product?.name || "Product").join(", ") || "";
+
+      // ── Steadfast ────────────────────────────────────────────────────
+      if (courierKey === "steadfast") {
         try {
-          const items = order.orderItems || order.items || [];
-          const itemDescription =
-            items
-              .map(
-                (item) =>
-                  item.productName || item.name || item.product?.name || "Product",
-              )
-              .join(", ") || "";
           const formData = {
             invoice: order.id?.toString() || "",
             recipient_name: order.customer?.name || order.customerName || "",
-            recipient_phone:
-              order.customer?.phone || order.shippingPhone || "",
+            recipient_phone: order.customer?.phone || order.shippingPhone || "",
             alternative_phone: order.customer?.phone || "",
-            recipient_email:
-              order.customer?.email || order.customerEmail || "",
-            recipient_address:
-              order.customerAddress || order.billingAddress || "",
+            recipient_email: order.customer?.email || order.customerEmail || "",
+            recipient_address: order.customerAddress || order.billingAddress || "",
             cod_amount: order.totalAmount ? Number(order.totalAmount) : 0,
             note: order.notes || "",
             item_description: itemDescription,
@@ -261,58 +251,112 @@ const OrdersPage = () => {
           };
           const result = await steadfastCreateOrder(formData).unwrap();
           if (result.status === 200) {
-            toast.success(
-              result.message || t("steadfast.orderCreatedSuccess", "Order created successfully"),
-            );
-            const trackingCode =
-              result.consignment?.tracking_code || result.tracking_code;
-            const consignmentId =
-              result.consignment?.consignment_id || result.consignment_id;
-            const shipmentData = {
-              shippingTrackingId: trackingCode || consignmentId || "",
-              shippingProvider: "Steadfast",
-              status: "shipped",
-            };
+            toast.success(result.message || t("steadfast.orderCreatedSuccess", "Order created on Steadfast!"));
+            const trackingCode = result.consignment?.tracking_code || result.tracking_code;
+            const consignmentId = result.consignment?.consignment_id || result.consignment_id;
             try {
               await shipOrder({
                 id: order.id,
-                body: shipmentData,
+                body: {
+                  shippingTrackingId: trackingCode || consignmentId || "",
+                  shippingProvider: "Steadfast",
+                  status: "shipped",
+                },
               }).unwrap();
-              toast.success(
-                t("steadfast.orderStatusUpdated", "Order status updated to Shipped"),
-              );
-            } catch (shipError) {
-              toast.error(
-                t(
-                  "steadfast.orderCreatedStatusFailed",
-                  "Order created but failed to update status",
-                ),
-              );
+              toast.success(t("steadfast.orderStatusUpdated", "Order status updated to Shipped"));
+            } catch {
+              toast.error(t("steadfast.orderCreatedStatusFailed", "Order created but failed to update status"));
             }
           } else {
-            toast.error(
-              result?.data?.message || t("steadfast.createOrderFailed", "Failed to create order"),
-            );
+            toast.error(result?.data?.message || t("steadfast.createOrderFailed", "Failed to create Steadfast order"));
           }
         } catch (error) {
-          const errorMessage =
-            error?.data?.message ||
-            t("steadfast.createOrderFailed", "Failed to create order");
-          toast.error(errorMessage);
+          toast.error(error?.data?.message || t("steadfast.createOrderFailed", "Failed to create Steadfast order"));
         }
         return;
       }
-      if (canPathao) {
-        navigate(`/pathao?orderId=${order.id}`);
+
+      // ── Pathao ───────────────────────────────────────────────────────
+      if (courierKey === "pathao") {
+        try {
+          const formData = {
+            store_id: localStorage.getItem("pathaoStoreId") || undefined,
+            merchant_order_id: order.id?.toString() || "",
+            recipient_name: order.customer?.name || order.customerName || "",
+            recipient_phone: order.customer?.phone || order.shippingPhone || "",
+            recipient_address: order.customerAddress || order.billingAddress || "",
+            recipient_city: 1,   // default Dhaka; user can configure via Pathao settings
+            recipient_zone: 1,
+            delivery_type: 48,   // normal delivery
+            item_type: 2,
+            special_instruction: order.notes || "",
+            item_quantity: items?.length || 1,
+            item_weight: 0.5,
+            amount_to_collect: order.totalAmount ? Number(order.totalAmount) : 0,
+            item_description: itemDescription,
+          };
+          const result = await pathaoCreateOrder(formData).unwrap();
+          const consignmentId = result?.data?.consignment_id || result?.consignment_id;
+          const trackingCode = result?.data?.order_tracking_code || result?.order_tracking_code;
+          toast.success(t("pathao.orderCreatedSuccess", "Order created on Pathao!"));
+          try {
+            await shipOrder({
+              id: order.id,
+              body: {
+                shippingTrackingId: trackingCode || consignmentId || "",
+                shippingProvider: "Pathao",
+                status: "shipped",
+              },
+            }).unwrap();
+            toast.success(t("pathao.orderStatusUpdated", "Order status updated to Shipped"));
+          } catch {
+            toast.error(t("pathao.orderCreatedStatusFailed", "Order created but failed to update status"));
+          }
+        } catch (error) {
+          toast.error(error?.data?.message || t("pathao.createOrderFailed", "Failed to create Pathao order"));
+        }
         return;
       }
-      if (canRedx) {
-        navigate(`/redx?orderId=${order.id}`);
+
+      // ── RedX ─────────────────────────────────────────────────────────
+      if (courierKey === "redx") {
+        try {
+          const formData = {
+            customer_name: order.customer?.name || order.customerName || "",
+            customer_phone: order.customer?.phone || order.shippingPhone || "",
+            delivery_area: order.customerAddress || order.billingAddress || "",
+            delivery_area_id: localStorage.getItem("redxAreaId") || 508, // default
+            merchant_invoice_id: order.id?.toString() || "",
+            cash_collection_amount: order.totalAmount ? Number(order.totalAmount) : 0,
+            parcel_weight: 500,  // grams
+            instruction: order.notes || "",
+            value: order.totalAmount ? Number(order.totalAmount) : 0,
+          };
+          const result = await redxCreateParcel(formData).unwrap();
+          const trackingId = result?.data?.tracking_id || result?.tracking_id;
+          toast.success(t("redx.orderCreatedSuccess", "Order created on RedX!"));
+          try {
+            await shipOrder({
+              id: order.id,
+              body: {
+                shippingTrackingId: trackingId || "",
+                shippingProvider: "RedX",
+                status: "shipped",
+              },
+            }).unwrap();
+            toast.success(t("redx.orderStatusUpdated", "Order status updated to Shipped"));
+          } catch {
+            toast.error(t("redx.orderCreatedStatusFailed", "Order created but failed to update status"));
+          }
+        } catch (error) {
+          toast.error(error?.data?.message || t("redx.createOrderFailed", "Failed to create RedX order"));
+        }
         return;
       }
+
       toast.error(t("common.failed"));
     },
-    [authUser, navigate, shipOrder, steadfastCreateOrder, t],
+    [authUser, shipOrder, steadfastCreateOrder, pathaoCreateOrder, redxCreateParcel, t],
   );
 
   // Handler functions
@@ -621,13 +665,13 @@ const OrdersPage = () => {
 
       <ExportCourierConfirmModal
         isOpen={exportModal.isOpen}
-        onClose={() => setExportModal({ isOpen: false, order: null, providerLabel: "" })}
+        onClose={() => setExportModal({ isOpen: false, order: null })}
         order={exportModal.order}
-        providerLabel={exportModal.providerLabel}
-        onConfirm={async () => {
+        availableCouriers={availableCouriers}
+        onSelect={async (courierKey) => {
           if (!exportModal.order) return;
-          await performExportCourier(exportModal.order);
-          setExportModal({ isOpen: false, order: null, providerLabel: "" });
+          await performExportCourier(exportModal.order, courierKey);
+          setExportModal({ isOpen: false, order: null });
         }}
       />
 
@@ -642,6 +686,12 @@ const OrdersPage = () => {
         setForm={setPartialPaymentForm}
         onConfirm={handlePartialPayment}
         isLoading={isRecordingPartial}
+      />
+
+      <FraudCheckModal
+        isOpen={fraudCheckModal.isOpen}
+        onClose={() => setFraudCheckModal({ isOpen: false, order: null })}
+        order={fraudCheckModal.order}
       />
     </div>
   );

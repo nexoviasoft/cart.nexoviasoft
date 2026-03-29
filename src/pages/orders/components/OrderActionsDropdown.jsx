@@ -11,7 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
- import { MoreHorizontal, Download, Truck } from "lucide-react";
+ import {
+  MoreHorizontal,
+  Download,
+  Truck,
+  Shield,
+  Copy,
+  Eye,
+  MapPin,
+  Ship,
+  Package,
+  XCircle,
+  RotateCcw,
+  CreditCard,
+  Trash2,
+  Cog,
+} from "lucide-react";
 import { generateParcelSlip } from "@/utils/parcelSlip";
 
 const OrderActionsDropdown = ({
@@ -24,6 +39,7 @@ const OrderActionsDropdown = ({
   onPartialPayment,
   onDelete,
   onExportCourier,
+  onFraudCheck,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -50,12 +66,23 @@ const OrderActionsDropdown = ({
         <DropdownMenuItem
           onClick={() => navigator.clipboard.writeText(order.id)}
         >
+          <Copy className="mr-2 h-4 w-4" />
           Copy Order ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}`)}>
+          <Eye className="mr-2 h-4 w-4" />
           View Details
         </DropdownMenuItem>
+        {onFraudCheck && (
+          <DropdownMenuItem
+            onClick={onFraudCheck}
+            className="text-indigo-600 dark:text-indigo-400 focus:text-indigo-600"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Fraud Check
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={async () => {
             try {
@@ -82,6 +109,7 @@ const OrderActionsDropdown = ({
         </DropdownMenuItem>
         {(order.status?.toLowerCase() === "pending" || !order.status) && (
           <DropdownMenuItem onClick={onProcess}>
+            <Cog className="mr-2 h-4 w-4" />
             Mark as Processing
           </DropdownMenuItem>
         )}
@@ -93,6 +121,7 @@ const OrderActionsDropdown = ({
                   navigate(`/orders/track?trackingId=${encodeURIComponent(order.shippingTrackingId)}`);
                 }}
               >
+                <MapPin className="mr-2 h-4 w-4" />
                 {t("orders.trackOrder")}
               </DropdownMenuItem>
             )}
@@ -101,6 +130,7 @@ const OrderActionsDropdown = ({
               {t("orders.exportCourier") || "Export Courier"}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onShip}>
+              <Ship className="mr-2 h-4 w-4" />
               Mark as Shipped
             </DropdownMenuItem>
           </>
@@ -108,12 +138,14 @@ const OrderActionsDropdown = ({
         {order.status?.toLowerCase() === "shipped" && (
           <>
             <DropdownMenuItem onClick={onDeliver}>
+              <Package className="mr-2 h-4 w-4" />
               Mark as Delivered
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onCancel}
               className="text-red-600 focus:text-red-600"
             >
+              <XCircle className="mr-2 h-4 w-4" />
               {t("orders.cancelOrder")}
             </DropdownMenuItem>
           </>
@@ -123,12 +155,14 @@ const OrderActionsDropdown = ({
             onClick={onRefund}
             className="text-orange-600 focus:text-orange-600"
           >
+            <RotateCcw className="mr-2 h-4 w-4" />
             {t("orders.refundOrder")}
           </DropdownMenuItem>
         )}
         {!order.isPaid &&
           order.status?.toLowerCase() !== "cancelled" && (
             <DropdownMenuItem onClick={onPartialPayment}>
+              <CreditCard className="mr-2 h-4 w-4" />
               Record Payment
             </DropdownMenuItem>
           )}
@@ -137,6 +171,7 @@ const OrderActionsDropdown = ({
           onClick={onDelete}
           className="text-red-600 focus:text-red-600"
         >
+          <Trash2 className="mr-2 h-4 w-4" />
           Delete Order
         </DropdownMenuItem>
       </DropdownMenuContent>

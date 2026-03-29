@@ -69,6 +69,22 @@ export const settingApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: "settings", id: "LIST" }],
     }),
+
+    getFraudCheckerApi: builder.query({
+      query: () => ({ url: "/setting/fraud-checker-api", method: "GET" }),
+      transformResponse: (res) => res?.data ?? null,
+      providesTags: [{ type: "settings", id: "FRAUD_CHECKER" }],
+    }),
+
+    upsertFraudCheckerApi: builder.mutation({
+      query: (body) => ({
+        url: "/setting/fraud-checker-api",
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json;charset=UTF-8" },
+      }),
+      invalidatesTags: [{ type: "settings", id: "FRAUD_CHECKER" }],
+    }),
   }),
 });
 
@@ -81,4 +97,6 @@ export const {
   useGetSuperadminSmtpQuery,
   useUpsertSuperadminSmtpMutation,
   useDeleteSettingMutation,
+  useGetFraudCheckerApiQuery,
+  useUpsertFraudCheckerApiMutation,
 } = settingApiSlice;

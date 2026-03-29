@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 
 const useOrdersTable = (
   filteredOrders,
+  allOrders,          // full unfiltered orders list for new-vs-returning detection
   getStatusLabel,
   setProcessModal,
   handleShipModalOpen,
@@ -14,11 +15,23 @@ const useOrdersTable = (
   setRefundModal,
   setPartialPaymentModal,
   setDeleteModal,
-  handleExportCourier
+  handleExportCourier,
+  setFraudCheckModal
 ) => {
   const { t } = useTranslation();
   const authUser = useSelector((state) => state.auth.user);
   const isReseller = authUser?.role === "RESELLER";
+
+  // Build a frequency map: phone → order count across ALL orders
+  const customerOrderCount = useMemo(() => {
+    const map = {};
+    const source = allOrders?.length ? allOrders : filteredOrders;
+    source.forEach((o) => {
+      const key = o.customer?.phone || o.customerPhone || o.shippingPhone || "";
+      if (key) map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [allOrders, filteredOrders]);
 
   const headers = useMemo(
     () => [
@@ -50,11 +63,27 @@ const useOrdersTable = (
                 year: "numeric",
               })
             : "-",
-          customer: (
-            <span className="font-medium text-gray-700 dark:text-gray-300">
-              {o.customer?.name ?? o.customerName ?? "-"}
-            </span>
-          ),
+          customer: (() => {
+            const name = o.customer?.name ?? o.customerName ?? "-";
+            const phone = o.customer?.phone || o.customerPhone || o.shippingPhone || "";
+            const count = customerOrderCount[phone] || 1;
+            const isNew = count === 1;
+            return (
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-gray-700 dark:text-gray-300">{name}</span>
+                <span
+                  className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                    isNew
+                      ? "bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800"
+                      : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${ isNew ? "bg-sky-500" : "bg-amber-500" }`} />
+                  {isNew ? "New Customer" : `Returning (${count}x)`}
+                </span>
+              </div>
+            );
+          })(),
           paid: (
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
@@ -165,11 +194,14 @@ const useOrdersTable = (
                 setPartialPaymentModal({ isOpen: true, order: o })
               }
               onDelete={() => setDeleteModal({ isOpen: true, order: o })}
+              onFraudCheck={() => setFraudCheckModal?.({ isOpen: true, order: o })}
             />
           ),
         })),
     [
       filteredOrders,
+      allOrders,
+      customerOrderCount,
       getStatusLabel,
       setProcessModal,
       handleShipModalOpen,
@@ -179,6 +211,7 @@ const useOrdersTable = (
       setPartialPaymentModal,
       setDeleteModal,
       handleExportCourier,
+      setFraudCheckModal,
       t,
       isReseller,
     ],

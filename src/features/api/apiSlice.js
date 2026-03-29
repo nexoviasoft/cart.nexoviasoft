@@ -166,7 +166,8 @@ export const apiSlice = createApi({
     "reseller-summary",
     "reseller-payouts",
     "admin-resellers",
-    "admin-payouts"
+    "admin-payouts",
+    "cash",
   ],
 
   // ✅ Keep cache for 60s (avoid data disappearing)

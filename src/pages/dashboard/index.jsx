@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Eye, ShoppingBag, Package } from "lucide-react";
+import { Eye, ShoppingBag, Package, AlertTriangle } from "lucide-react";
 import BdtIcon from "@/components/icons/BdtIcon";
 import { useTranslation } from "react-i18next";
 import { useGetDashboardQuery } from "@/features/dashboard/dashboardApiSlice";
@@ -137,7 +137,7 @@ const DashboardPage = () => {
         companyName={companyName}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <MetricCard
           title={t("dashboard.totalProducts")}
           value={
@@ -209,6 +209,19 @@ const DashboardPage = () => {
           icon={Eye}
           iconBgColor="bg-purple-100 dark:bg-purple-500/10"
           iconColor="text-purple-600 dark:text-purple-400"
+          sparklineData={sparklineData}
+        />
+        <MetricCard
+          title={t("dashboard.lowStockProducts") || "Low Stock Products"}
+          value={
+            dashboardData?.overviewMetrics?.lowStockProducts?.toLocaleString() ??
+            "0"
+          }
+          change={dashboardData?.stats?.[0]?.delta ?? "0%"}
+          changeType="decrease"
+          icon={AlertTriangle}
+          iconBgColor="bg-amber-100 dark:bg-amber-500/10"
+          iconColor="text-amber-600 dark:text-amber-400"
           sparklineData={sparklineData}
         />
       </div>

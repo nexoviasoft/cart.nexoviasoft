@@ -15,14 +15,16 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLazyCheckExternalFraudQuery } from "@/features/fraud/fraudApiSlice";
 
 const FraudPage = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [fraudData, setFraudData] = useState(null);
   const [error, setError] = useState(null);
+
+  const [triggerCheck, { isFetching: isLoading }] = useLazyCheckExternalFraudQuery();
 
   const getOperatorName = (phone) => {
     if (!phone || phone.length < 3) return t("fraud.operatorUnknown");
@@ -46,29 +48,25 @@ const FraudPage = () => {
       return;
     }
 
-    setIsLoading(true);
     setError(null);
     setFraudData(null);
 
     try {
-      const response = await fetch(
-        `https://fraudchecker.link/free-fraud-checker-bd/api/search.php?phone=${encodeURIComponent(phone)}`
-      );
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        setFraudData(result.data);
+      const result = await triggerCheck(phone).unwrap();
+      // result is the raw external API response
+      const data = result?.data ?? result;
+      if (data && (result?.success !== false)) {
+        setFraudData(data);
         toast.success(t("fraud.checkCompleted"));
       } else {
         setError(t("fraud.noDataFound"));
         toast.error(t("fraud.noDataFound"));
       }
-    } catch (error) {
-      console.error("Fraud check error:", error);
-      setError(t("fraud.checkFailed"));
-      toast.error(t("fraud.checkFailed"));
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error("Fraud check error:", err);
+      const msg = err?.data?.message ?? t("fraud.checkFailed");
+      setError(msg);
+      toast.error(msg);
     }
   };
 

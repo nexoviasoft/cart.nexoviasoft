@@ -139,6 +139,15 @@ const OrderViewPage = () => {
     0
   ) ?? 0;
 
+  const getShippingCost = (deliveryType) => {
+    const type = (deliveryType || "").toLowerCase().replace(/\s/g, "");
+    if (type === "insidedhaka") return 60;
+    if (type === "outsidedhaka") return 120;
+    return 0;
+  };
+
+  const shippingCost = getShippingCost(order.deliveryType);
+
   const canMarkProcessing =
     !isReseller &&
     (order.status?.toLowerCase() === "pending" ||
@@ -341,7 +350,7 @@ const OrderViewPage = () => {
                 </div>
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                   <span className="font-medium">{t("orders.shippingCost", "Shipping Cost")}</span>
-                  <span className="font-bold">৳0.00</span>
+                  <span className="font-bold">৳{shippingCost.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                   <span className="font-medium">{t("orders.discount", "Discount")}</span>
@@ -353,7 +362,7 @@ const OrderViewPage = () => {
                     {t("orders.grandTotal", "Grand Total")}
                   </span>
                   <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                    ৳{formatAmount(order.totalAmount)}
+                    ৳{formatAmount(subtotal + shippingCost)}
                   </span>
                 </div>
               </div>

@@ -52,6 +52,16 @@ export const fraudApiSlice = apiSlice.injectEndpoints({
         { type: "users", id },
       ],
     }),
+
+    // GET /fraudchecker/external/check?phone=...
+    checkExternalFraud: builder.query({
+      query: (phone) => ({
+        url: `${FRAUD_BASE}/external/check?phone=${encodeURIComponent(phone)}`,
+        method: "GET",
+      }),
+      transformResponse: (res) => res?.data ?? res,
+      keepUnusedDataFor: 0,
+    }),
   }),
 });
 
@@ -60,5 +70,5 @@ export const {
   useLazyCheckUserRiskQuery,
   useFlagUserMutation,
   useUnflagUserMutation,
-  
+  useLazyCheckExternalFraudQuery,
 } = fraudApiSlice;

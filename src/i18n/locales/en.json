@@ -184,7 +184,10 @@
     "settingsPreferences": "Preferences",
     "settingsAccount": "Account",
     "settingsBillings": "Billings",
-    "settingsNotifications": "Notifications"
+    "settingsNotifications": "Notifications",
+    "myCash": "My Cash",
+    "income": "Income",
+    "expense": "Expense"
   },
   "search": {
     "placeholder": "Search orders, products, customers...",
@@ -289,6 +292,7 @@
     "totalSales": "Total Sales",
     "totalRevenue": "Total Revenue",
     "totalCustomers": "Total Customers",
+    "lowStockProducts": "Low Stock Products",
     "overviewTagline1": "Overview of your store performance",
     "overviewTagline2": "Real-time analytics and insights",
     "overviewTagline3": "Manage orders and inventory effortlessly",

@@ -55,6 +55,8 @@ import CreditNotesPage from "./pages/credit-notes";
 import CreateCreditNotePage from "./pages/credit-notes/create";
 import CreditNoteDetailsPage from "./pages/credit-notes/_id";
 import FraudPage from "./pages/fraud";
+import IncomePage from "./pages/my-cash/income";
+import ExpensePage from "./pages/my-cash/expense";
 import BannerPage from "./pages/banner";
 import CreateBannerPage from "./pages/banner/create";
 import BannerEditPage from "./pages/banner/_id/edit";
@@ -462,6 +464,22 @@ export const routes = createBrowserRouter([
         ),
       },
       {
+        path: "/my-cash/income",
+        element: (
+          <PermissionRoute>
+            <IncomePage />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "/my-cash/expense",
+        element: (
+          <PermissionRoute>
+            <ExpensePage />
+          </PermissionRoute>
+        ),
+      },
+      {
         path: "/banners",
         element: (
           <PermissionRoute permission={FeaturePermission.BANNERS}>
@@ -600,7 +618,7 @@ export const routes = createBrowserRouter([
       {
         path: "/resellers",
         element: (
-          <PermissionRoute permission={FeaturePermission.STAFF}>
+          <PermissionRoute permission={FeaturePermission.RESELLER_MANAGEMENT}>
             <ResellersListPage />
           </PermissionRoute>
         ),
@@ -608,7 +626,7 @@ export const routes = createBrowserRouter([
       {
         path: "/resellers/:id",
         element: (
-          <PermissionRoute permission={FeaturePermission.STAFF}>
+          <PermissionRoute permission={FeaturePermission.RESELLER_MANAGEMENT}>
             <ResellerDetailPage />
           </PermissionRoute>
         ),
