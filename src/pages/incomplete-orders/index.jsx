@@ -164,9 +164,38 @@ const EmailFollowUpModal = ({ isOpen, onClose, order, onConfirm, isLoading }) =>
 
   useEffect(() => {
     if (isOpen && order) {
+      const name = order.customer?.name || order.customerName || "Customer";
+      const items = order.orderItems || order.items || [];
+
+      const productLines = items.length > 0
+        ? items.map((item) => {
+            const productName = item.productName || item.name || item.product?.name || "Product";
+            const qty = item.quantity || 1;
+            const price = item.price || item.unitPrice || item.salePrice || 0;
+            return `  • ${productName} × ${qty}${price ? ` = ৳${Number(price * qty).toLocaleString("en-BD")}` : ""}`;
+          }).join("\n")
+        : "  • (No items found)";
+
+      const total = order.totalAmount
+        ? `৳${Number(order.totalAmount).toLocaleString("en-BD")}`
+        : "";
+
       reset({
-        subject: `Follow up on your order`,
-        body: `Hello ${order.customerName || "Customer"},\n\nWe noticed you didn't complete your order. Is there anything we can help you with?\n\nBest regards,\nSupport Team`,
+        subject: `আপনার অর্ডারটি সম্পন্ন করুন – আমরা আপনার জন্য অপেক্ষা করছি!`,
+        body: [
+          `প্রিয় ${name},`,
+          ``,
+          `আমরা লক্ষ্য করেছি যে আপনি আমাদের স্টোর থেকে অর্ডার করতে গিয়েছিলেন কিন্তু অর্ডারটি সম্পন্ন করেননি।`,
+          ``,
+          `📦 আপনার নির্বাচিত পণ্যসমূহ:`,
+          productLines,
+          total ? `\n💰 মোট: ${total}` : "",
+          ``,
+          `আপনার যদি কোনো সমস্যা হয়ে থাকে বা সাহায্যের প্রয়োজন হয়, অনুগ্রহ করে আমাদের সাথে যোগাযোগ করুন।`,
+          ``,
+          `ধন্যবাদ,`,
+          `সাপোর্ট টিম`,
+        ].join("\n"),
         html: "",
       });
     }
@@ -227,6 +256,8 @@ const IncompleteOrdersPage = () => {
   const [emailModal, setEmailModal] = useState({ isOpen: false, order: null });
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   // Filter only incomplete orders
   const incompleteOrders = useMemo(() => {
@@ -252,6 +283,15 @@ const IncompleteOrdersPage = () => {
 
     return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }, [orders, searchQuery, dateRange]);
+
+  // Reset to page 1 when filters change
+  const totalPages = Math.max(1, Math.ceil(incompleteOrders.length / PAGE_SIZE));
+  const pagedOrders = incompleteOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(Math.min(Math.max(1, page), totalPages));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -324,7 +364,34 @@ const IncompleteOrdersPage = () => {
   const handleWhatsApp = (order) => {
     const phone = order.customer?.phone || order.customerPhone || order.shippingPhone || "";
     if (!phone) { toast.error("No phone number found"); return; }
-    const msg = `Hello ${order.customerName || "Customer"}, we noticed you were interested in items on our store but didn't finish your order. Can we help?`;
+
+    const name = order.customer?.name || order.customerName || "Customer";
+    const items = order.orderItems || order.items || [];
+
+    // Build product list lines
+    const productLines = items.length > 0
+      ? items.map((item) => {
+          const productName = item.productName || item.name || item.product?.name || "Product";
+          const qty = item.quantity || 1;
+          const price = item.price || item.unitPrice || item.salePrice || 0;
+          return `  • ${productName} × ${qty}${price ? ` = ৳${Number(price * qty).toLocaleString("en-BD")}` : ""}`;
+        }).join("\n")
+      : "  • (No items found)";
+
+    const total = order.totalAmount ? `৳${Number(order.totalAmount).toLocaleString("en-BD")}` : "";
+
+    const msg = [
+      `হ্যালো ${name}! 😊`,
+      ``,
+      `আমরা দেখলাম আপনি আমাদের স্টোর থেকে অর্ডার করতে গিয়েছিলেন কিন্তু সম্পন্ন করেননি।`,
+      ``,
+      `📦 আপনার নির্বাচিত পণ্যসমূহ:`,
+      productLines,
+      total ? `\n💰 মোট: ${total}` : "",
+      ``,
+      `আপনার কি কোনো সাহায্য দরকার? আমরা আপনাকে সহায়তা করতে প্রস্তুত! 🙏`,
+    ].filter((line) => line !== undefined).join("\n");
+
     window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -381,19 +448,19 @@ const IncompleteOrdersPage = () => {
           type="text"
           placeholder="Search by name, phone, email, order ID..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           className="flex-1 border border-gray-200 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-neutral-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-400"
         />
         <input
           type="date"
           value={dateRange.start}
-          onChange={(e) => setDateRange((p) => ({ ...p, start: e.target.value }))}
+          onChange={(e) => { setDateRange((p) => ({ ...p, start: e.target.value })); setCurrentPage(1); }}
           className="border border-gray-200 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-neutral-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
         />
         <input
           type="date"
           value={dateRange.end}
-          onChange={(e) => setDateRange((p) => ({ ...p, end: e.target.value }))}
+          onChange={(e) => { setDateRange((p) => ({ ...p, end: e.target.value })); setCurrentPage(1); }}
           className="border border-gray-200 dark:border-neutral-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-neutral-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
         />
         {(dateRange.start || dateRange.end) && (
@@ -419,8 +486,20 @@ const IncompleteOrdersPage = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">{incompleteOrders.length} record{incompleteOrders.length !== 1 ? "s" : ""} found</p>
-          {incompleteOrders.map((order) => (
+          {/* Records info */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              {incompleteOrders.length} record{incompleteOrders.length !== 1 ? "s" : ""} found
+              {totalPages > 1 && (
+                <span className="ml-2 text-gray-400">
+                  — Page {currentPage} of {totalPages}
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Order rows */}
+          {pagedOrders.map((order) => (
             <IncompleteOrderRow
               key={order.id}
               order={order}
@@ -431,6 +510,56 @@ const IncompleteOrdersPage = () => {
               isConverting={isConverting}
             />
           ))}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1.5 pt-4">
+              {/* Previous */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Prev
+              </button>
+
+              {/* Page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && p - arr[idx - 1] > 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "…" ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 text-sm">…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => handlePageChange(item)}
+                      className={`min-w-[34px] px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                        currentPage === item
+                          ? "bg-violet-600 border-violet-600 text-white font-semibold"
+                          : "border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )
+              }
+
+              {/* Next */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+          )}
         </div>
       )}
 
