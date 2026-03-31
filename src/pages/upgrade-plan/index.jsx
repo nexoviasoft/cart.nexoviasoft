@@ -390,6 +390,26 @@ const FEATURES_OPTIONS = [
     label: "Custom Domain",
     details: "Connect and manage custom domains for the storefront.",
   },
+  {
+    value: "INCOMPLETE_ORDERS",
+    label: "Incomplete Orders",
+    details: "Track abandoned checkouts and recover lost sales.",
+  },
+  {
+    value: "PRODUCT_STICKER",
+    label: "Product Sticker",
+    details: "Generate and print barcodes/QR codes for products.",
+  },
+  {
+    value: "RESELLER_MANAGEMENT",
+    label: "Reseller Management",
+    details: "Manage resellers, their commissions and orders.",
+  },
+  {
+    value: "MY_CASH",
+    label: "My Cash",
+    details: "Track income and expenses for your business.",
+  },
 ];
 
 const getFeatureMeta = (key) => {

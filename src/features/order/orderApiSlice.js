@@ -156,6 +156,27 @@ export const orderApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: "orders", id: "LIST" }, { type: "activityLog", id: "LIST" }],
     }),
+    convertOrder: builder.mutation({
+      query: ({ id, params }) => ({
+        url: `/orders/${id}/convert`,
+        method: "PATCH",
+        params,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "orders", id },
+        { type: "orders", id: "LIST" },
+        { type: "orders", id: "STATS" },
+      ],
+    }),
+    saveIncompleteOrder: builder.mutation({
+      query: ({ body, params, orderId }) => ({
+        url: "/orders/incomplete",
+        method: "POST",
+        body,
+        params: { ...params, orderId },
+      }),
+      invalidatesTags: [{ type: "orders", id: "LIST" }, { type: "orders", id: "STATS" }],
+    }),
   }),
 });
 
@@ -178,4 +199,6 @@ export const {
   useRefundOrderMutation,
   useDeleteOrderMutation,
   useBarcodeScanMutation,
+  useConvertOrderMutation,
+  useSaveIncompleteOrderMutation,
 } = orderApiSlice;

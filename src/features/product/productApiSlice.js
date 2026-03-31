@@ -185,6 +185,16 @@ export const productApiSlice = apiSlice.injectEndpoints({
         { type: "products", id: `STOCK_HISTORY_${id}` },
       ],
     }),
+    
+    // Public product fetch
+    getPublicProduct: builder.query({
+      query: ({ id, companyId }) => ({
+        url: `/public/products/${id}`,
+        method: "GET",
+        params: { companyId },
+      }),
+      transformResponse: (res) => res?.data,
+    }),
   }),
 });
 
@@ -205,4 +215,5 @@ export const {
   usePublishDraftMutation,
   usePermanentDeleteProductMutation,
   useGetProductStockHistoryQuery,
+  useGetPublicProductQuery,
 } = productApiSlice;

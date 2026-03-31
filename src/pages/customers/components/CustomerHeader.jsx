@@ -10,6 +10,13 @@ import {
   hasPermission,
   FeaturePermission,
 } from "@/constants/feature-permission";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FileText, Sheet } from "lucide-react";
 
 const CustomerHeader = ({ onExport }) => {
   const { t } = useTranslation();
@@ -39,15 +46,48 @@ const CustomerHeader = ({ onExport }) => {
       <div className="flex items-center gap-2">
         <LanguageSwitcher variant="compact" />
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onExport}
-          className="h-8 px-3 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1f26] text-xs font-medium flex items-center gap-1.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50"
-        >
-          <Download className="w-3.5 h-3.5" />
-          {t("customers.exportToPdf")}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1a1f26] text-xs font-medium flex items-center gap-1.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {t("common.export")}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              onClick={() => onExport("pdf")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <FileText className="w-4 h-4 text-red-500" />
+              <span>{t("customers.exportToPdf")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onExport("excel")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Sheet className="w-4 h-4 text-emerald-500" />
+              <span>{t("customers.exportToExcel")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onExport("excel-name-phone")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Sheet className="w-4 h-4 text-emerald-500" />
+              <span>{t("customers.exportNamePhone")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onExport("excel-name-email")}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Sheet className="w-4 h-4 text-emerald-500" />
+              <span>{t("customers.exportNameEmail")}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <CustomerNotifications />
 

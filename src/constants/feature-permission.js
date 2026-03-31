@@ -77,6 +77,9 @@ export const FeaturePermission = Object.freeze({
   RESELLER_MANAGEMENT: "RESELLER_MANAGEMENT",
   // My Cash
   MY_CASH: "MY_CASH",
+  // New features
+  INCOMPLETE_ORDERS: "INCOMPLETE_ORDERS",
+  PRODUCT_STICKER: "PRODUCT_STICKER",
 });
 
 // Values the backend accepts for assign-permissions; filter payload to this set when saving
@@ -120,6 +123,9 @@ export const API_ALLOWED_PERMISSION_VALUES = Object.freeze([
   "THEME_MANAGEMENT",
   "CUSTOM_DOMAIN",
   "RESELLER_MANAGEMENT",
+  "MY_CASH",
+  "INCOMPLETE_ORDERS",
+  "PRODUCT_STICKER",
 ]);
 
 export const hasPermission = (user, permission) => {

@@ -26,16 +26,17 @@ const Layout = () => {
 
   return (
     <main className="min-h-screen w-full bg-gray-50 dark:bg-[#09090b] text-slate-900 dark:text-slate-50 flex transition-colors duration-300">
-      {/* Sidebar - Fixed on detailed, hidden on mobile */}
-      <SideNav
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
+      <div className="no-print">
+        <SideNav
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+        />
+      </div>
 
       {/* Main Content Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 ease-in-out">
         {/* Top Navbar - Sticky */}
-        <div className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/70 dark:bg-[#09090b]/80 border-b border-gray-200/50 dark:border-white/5 supports-[backdrop-filter]:bg-white/60">
+        <div className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/70 dark:bg-[#09090b]/80 border-b border-gray-200/50 dark:border-white/5 supports-[backdrop-filter]:bg-white/60 no-print">
           <TopNavbar setIsMobileMenuOpen={setIsMobileMenuOpen} />
         </div>
 
@@ -45,7 +46,7 @@ const Layout = () => {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out flex-1">
               <Outlet />
             </div>
-            <div className="mt-auto pt-8">
+            <div className="mt-auto pt-8 no-print">
               <Footer />
             </div>
           </div>

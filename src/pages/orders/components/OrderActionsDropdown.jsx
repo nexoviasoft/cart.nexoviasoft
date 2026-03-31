@@ -26,6 +26,8 @@ import {
   CreditCard,
   Trash2,
   Cog,
+  MessageCircle,
+  CheckCircle,
 } from "lucide-react";
 import { generateParcelSlip } from "@/utils/parcelSlip";
 
@@ -40,6 +42,9 @@ const OrderActionsDropdown = ({
   onDelete,
   onExportCourier,
   onFraudCheck,
+  onConvert,
+  onWhatsApp,
+  onEmail,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -107,7 +112,34 @@ const OrderActionsDropdown = ({
           <Download className="mr-2 h-4 w-4" />
           {t("orders.printParcelSlip") || "Print Parcel Slip"}
         </DropdownMenuItem>
-        {(order.status?.toLowerCase() === "pending" || !order.status) && (
+        {order.status?.toLowerCase() === "incomplete" && (
+          <>
+            <DropdownMenuItem
+              onClick={onWhatsApp}
+              className="text-green-600 dark:text-green-400 focus:text-green-600 font-bold"
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Contact on WhatsApp
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={onEmail}
+              className="text-blue-600 dark:text-blue-400 focus:text-blue-600 font-bold"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Contact on Email
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={onConvert}
+              className="text-blue-600 dark:text-blue-400 focus:text-blue-600 font-bold"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Convert to Order
+            </DropdownMenuItem>
+          </>
+        )}
+        {(order.status?.toLowerCase() === "pending" ||
+          order.status?.toLowerCase() === "incomplete" ||
+          !order.status) && (
           <DropdownMenuItem onClick={onProcess}>
             <Cog className="mr-2 h-4 w-4" />
             Mark as Processing

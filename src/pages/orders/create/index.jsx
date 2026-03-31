@@ -8,7 +8,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import TextField from "@/components/input/TextField";
 import Dropdown from "@/components/dropdown/dropdown";
-import { useCreateOrderMutation } from "@/features/order/orderApiSlice";
+import {
+  useCreateOrderMutation,
+  useSaveIncompleteOrderMutation,
+} from "@/features/order/orderApiSlice";
 import { useGetProductsQuery } from "@/features/product/productApiSlice";
 import { useGetUsersQuery } from "@/features/user/userApiSlice";
 import { useSelector } from "react-redux";
@@ -84,10 +87,22 @@ const CreateOrderPage = () => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
     clearErrors,
     trigger,
+    watch,
   } = form;
+
+  const watchedValues = watch([
+    "customerName",
+    "customerPhone",
+    "customerEmail",
+    "customerAddress",
+    "shippingAddress",
+  ]);
+
+  const [saveIncompleteOrder] = useSaveIncompleteOrderMutation();
+  const [incompleteOrderId, setIncompleteOrderId] = useState(null);
+  const incompleteOrderIdRef = React.useRef(null);
 
   // Clear validation errors and re-validate when customer selection changes
   useEffect(() => {
@@ -169,17 +184,6 @@ const CreateOrderPage = () => {
       return;
     }
 
-    // Manual validation: if no customer selected, customerName is required
-    if (
-      !selectedCustomer &&
-      (!data.customerName || data.customerName.trim().length < 2)
-    ) {
-      toast.error(
-        t("orders.customerNameRequiredMin", "Customer name is required"),
-      );
-      return;
-    }
-
     const payload = {
       customerId: selectedCustomer?.value || undefined,
       customerName: !selectedCustomer
@@ -210,6 +214,8 @@ const CreateOrderPage = () => {
       setItems([]);
       setSelectedCustomer(null);
       setSelectedPayment(paymentOptions[0]);
+      incompleteOrderIdRef.current = null;
+      setIncompleteOrderId(null);
       navigate("/orders");
     } else {
       toast.error(
@@ -218,6 +224,60 @@ const CreateOrderPage = () => {
       );
     }
   };
+
+  // Implement Auto-Save logic
+  useEffect(() => {
+    const { customerName, customerPhone, customerEmail, customerAddress, shippingAddress } = form.getValues();
+    
+    // Only save if there's some content and at least one item
+    if (!customerName?.trim() && !customerPhone?.trim() && !customerEmail?.trim()) return;
+    if (items.length === 0) return;
+
+    const performAutoSave = async () => {
+      try {
+        const payload = {
+          customerId: selectedCustomer?.value || undefined,
+          customerName: !selectedCustomer ? customerName : undefined,
+          customerPhone: !selectedCustomer ? customerPhone : undefined,
+          customerEmail: !selectedCustomer ? customerEmail : undefined,
+          customerAddress: !selectedCustomer ? customerAddress : undefined,
+          shippingAddress: shippingAddress || undefined,
+          items: items.map((it) => ({
+            productId: it.productId,
+            quantity: it.quantity,
+          })),
+          paymentMethod: selectedPayment?.value,
+        };
+
+        const res = await saveIncompleteOrder({
+          body: payload,
+          params: { 
+            companyId: user?.companyId,
+            orderId: incompleteOrderIdRef.current || undefined 
+          },
+        }).unwrap();
+
+        if (res?.id) {
+          incompleteOrderIdRef.current = res.id;
+          setIncompleteOrderId(res.id);
+        }
+      } catch (error) {
+        console.error("Auto-save failed:", error);
+      }
+    };
+
+    const timeoutId = setTimeout(performAutoSave, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, items, selectedCustomer, selectedPayment, user?.companyId, saveIncompleteOrder, form]);
+
+  // Handle page exit
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // In a real app we might do some sync beacon here
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
 
   return (
     <motion.div

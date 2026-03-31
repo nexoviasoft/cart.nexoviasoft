@@ -42,12 +42,21 @@ const getActionBadgeClass = (action) => {
   );
 };
 
-const getActionBadge = (action) => {
+const toCamelCase = (str) => {
+  return (str || "")
+    .toLowerCase()
+    .replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+};
+
+const getActionBadge = (action, t) => {
+  const camelAction = toCamelCase(action);
+  const label = t(`activityLogs.${camelAction}`) || String(action || "").replace(/_/g, " ");
+  
   return (
     <span
       className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${getActionBadgeClass(action)}`}
     >
-      {String(action || "").replace(/_/g, " ")}
+      {label}
     </span>
   );
 };
@@ -192,18 +201,23 @@ export function useActivityLogsPage({ t }) {
       );
     }
 
-    return logs.map((log) => ({
-      id: log.id,
-      date: formatDate(log.createdAt),
-      actionBadge: getActionBadge(log.action),
-      action: log.action,
-      entity: (log.entity || "").replace(/_/g, " "),
-      description: log.description || "-",
-      performedBy: log.performedBy?.name || log.performedBy?.email || "-",
-      targetUser: log.targetUser?.name || log.targetUser?.email || "-",
-      raw: log,
-    }));
-  }, [logsData, searchTerm]);
+    return logs.map((log) => {
+      const camelEntity = toCamelCase(log.entity);
+      const translatedEntity = t(`activityLogs.${camelEntity}`) || String(log.entity || "").replace(/_/g, " ");
+
+      return {
+        id: log.id,
+        date: formatDate(log.createdAt),
+        actionBadge: getActionBadge(log.action, t),
+        action: log.action,
+        entity: translatedEntity,
+        description: log.description || "-",
+        performedBy: log.performedBy?.name || log.performedBy?.email || "-",
+        targetUser: log.targetUser?.name || log.targetUser?.email || "-",
+        raw: log,
+      };
+    });
+  }, [logsData, searchTerm, t]);
 
   return {
     actionOptions,

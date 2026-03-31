@@ -265,3 +265,10 @@ html[lang="bn"] * {
 .login-button:hover::before {
   left: 100%;
 }
+
+/* --- Print Utilities --- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

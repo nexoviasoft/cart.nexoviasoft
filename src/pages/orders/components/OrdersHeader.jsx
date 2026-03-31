@@ -20,6 +20,8 @@ const OrdersHeader = ({
   handleExport,
   searchQuery,
   setSearchQuery,
+  title,
+  subtitle,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -38,10 +40,10 @@ const OrdersHeader = ({
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-              {t("orders.title") || "Orders"}
+              {title || t("orders.title") || "Orders"}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-              Manage and track orders
+              {subtitle || "Manage and track orders"}
             </p>
           </div>
         </div>

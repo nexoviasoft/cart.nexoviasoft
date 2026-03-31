@@ -35,6 +35,8 @@ import CreateProductPage from "./pages/products/create";
 import BulkUploadPage from "./pages/products/bulk-upload";
 import ProductViewPage from "./pages/products/_id";
 import ProductEditPage from "./pages/products/_id/edit";
+import ProductStickerPage from "./pages/product-sticker";
+import PublicProductDetailPage from "./pages/product-detail-public";
 import InventoryPage from "./pages/inventory";
 import InventoryHistoryPage from "./pages/inventory/history";
 import FlashSellPage from "./pages/flash-sell";
@@ -292,6 +294,14 @@ export const routes = createBrowserRouter([
         element: (
           <PermissionRoute permission={FeaturePermission.PRODUCTS}>
             <ProductEditPage />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "/product-sticker",
+        element: (
+          <PermissionRoute permission={FeaturePermission.PRODUCTS}>
+            <ProductStickerPage />
           </PermissionRoute>
         ),
       },
@@ -962,5 +972,6 @@ export const routes = createBrowserRouter([
     element: <CheckResetPasswordEmailPage />,
   },
   { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/p/:id", element: <PublicProductDetailPage /> },
   { path: "*", element: <ErrorPage /> },
 ]);

@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import OrderActionsDropdown from "../components/OrderActionsDropdown";
 import { useSelector } from "react-redux";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Mail, Cog } from "lucide-react";
 
 const useOrdersTable = (
   filteredOrders,
@@ -16,7 +18,10 @@ const useOrdersTable = (
   setPartialPaymentModal,
   setDeleteModal,
   handleExportCourier,
-  setFraudCheckModal
+  setFraudCheckModal,
+  onConvert,
+  onWhatsApp,
+  onEmail,
 ) => {
   const { t } = useTranslation();
   const authUser = useSelector((state) => state.auth.user);
@@ -182,20 +187,56 @@ const useOrdersTable = (
             // For resellers: limit to view/parcel slip actions only (handled inside dropdown)
             <OrderActionsDropdown order={o} />
           ) : (
-            <OrderActionsDropdown
-              order={o}
-              onProcess={() => setProcessModal({ isOpen: true, order: o })}
-              onShip={() => handleShipModalOpen(o)}
-              onExportCourier={() => handleExportCourier?.(o)}
-              onDeliver={() => setDeliverModal({ isOpen: true, order: o })}
-              onCancel={() => setCancelModal({ isOpen: true, order: o })}
-              onRefund={() => setRefundModal({ isOpen: true, order: o })}
-              onPartialPayment={() =>
-                setPartialPaymentModal({ isOpen: true, order: o })
-              }
-              onDelete={() => setDeleteModal({ isOpen: true, order: o })}
-              onFraudCheck={() => setFraudCheckModal?.({ isOpen: true, order: o })}
-            />
+            <div className="flex items-center gap-2">
+              {o.status?.toLowerCase() === "incomplete" && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                    onClick={() => setProcessModal({ isOpen: true, order: o })}
+                    title="Mark as Processing"
+                  >
+                    <Cog className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    onClick={() => onWhatsApp?.(o)}
+                    title="WhatsApp Follow-up"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    onClick={() => onEmail?.(o)}
+                    title="Email Follow-up"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              <OrderActionsDropdown
+                order={o}
+                onProcess={() => setProcessModal({ isOpen: true, order: o })}
+                onShip={() => handleShipModalOpen(o)}
+                onExportCourier={() => handleExportCourier?.(o)}
+                onDeliver={() => setDeliverModal({ isOpen: true, order: o })}
+                onCancel={() => setCancelModal({ isOpen: true, order: o })}
+                onRefund={() => setRefundModal({ isOpen: true, order: o })}
+                onPartialPayment={() =>
+                  setPartialPaymentModal({ isOpen: true, order: o })
+                }
+                onDelete={() => setDeleteModal({ isOpen: true, order: o })}
+                onFraudCheck={() => setFraudCheckModal?.({ isOpen: true, order: o })}
+                onConvert={() => onConvert?.(o)}
+                onWhatsApp={() => onWhatsApp?.(o)}
+                onEmail={() => onEmail?.(o)}
+              />
+            </div>
           ),
         })),
     [
@@ -212,6 +253,8 @@ const useOrdersTable = (
       setDeleteModal,
       handleExportCourier,
       setFraudCheckModal,
+      onConvert,
+      onWhatsApp,
       t,
       isReseller,
     ],

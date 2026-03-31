@@ -52,6 +52,7 @@ import {
   Wallet,
   TrendingUp,
   TrendingDown,
+  Barcode,
 } from "lucide-react";
 import { FeaturePermission } from "@/constants/feature-permission";
 
@@ -252,6 +253,14 @@ export const navSections = [
         link: "/flash-sell",
         permission: FeaturePermission.FLASH_SELL,
         icon: Zap,
+      },
+      {
+        id: 7.9,
+        title: "Product Sticker",
+        tKey: "nav.productSticker",
+        link: "/product-sticker",
+        permission: FeaturePermission.PRODUCT_STICKER,
+        icon: Barcode,
       },
     ],
   },

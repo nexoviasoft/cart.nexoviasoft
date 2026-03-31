@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -14,7 +14,22 @@ import {
   useRecordPartialPaymentMutation,
   useCancelOrderMutation,
   useRefundOrderMutation,
+  useConvertOrderMutation,
 } from "@/features/order/orderApiSlice";
+import { useSendCustomerEmailNotificationMutation } from "@/features/notifications/notificationsApiSlice";
+import { useGetSettingsQuery } from "@/features/setting/settingApiSlice";
+import { useForm, Controller } from "react-hook-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import TextField from "@/components/input/TextField";
+import RichTextEditor from "@/components/input/RichTextEditor";
+import { Button } from "@/components/ui/button";
+import { Send, Mail } from "lucide-react";
 import { useCreateOrderMutation as useSteadfastCreateOrderMutation } from "@/features/steadfast/steadfastApiSlice";
 import { useCreateOrderMutation as usePathaoCreateOrderMutation } from "@/features/pathao/pathaoApiSlice";
 import { useCreateParcelMutation as useRedxCreateParcelMutation } from "@/features/redx/redxApiSlice";
@@ -35,7 +50,7 @@ import FraudCheckModal from "./components/FraudCheckModal";
 import useOrdersFilters from "./hooks/useOrdersFilters";
 import useOrdersTable from "./hooks/useOrdersTable";
 
-const OrdersPage = () => {
+const OrdersPage = ({ defaultTab = "All" }) => {
   const { t } = useTranslation();
   const authUser = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
@@ -55,6 +70,10 @@ const OrdersPage = () => {
     useRecordPartialPaymentMutation();
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
   const [refundOrder, { isLoading: isRefunding }] = useRefundOrderMutation();
+  const [convertOrder, { isLoading: isConverting }] = useConvertOrderMutation();
+  const [sendEmail, { isLoading: isSendingEmail }] = useSendCustomerEmailNotificationMutation();
+  const { data: settings = [] } = useGetSettingsQuery();
+  const smtpConfig = settings?.[0] || {};
   const [steadfastCreateOrder] = useSteadfastCreateOrderMutation();
   const [pathaoCreateOrder] = usePathaoCreateOrderMutation();
   const [redxCreateParcel] = useRedxCreateParcelMutation();
@@ -109,9 +128,13 @@ const OrdersPage = () => {
     isOpen: false,
     order: null,
   });
+  const [emailModal, setEmailModal] = useState({
+    isOpen: false,
+    order: null,
+  });
 
   // Filter states
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState(defaultTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -120,6 +143,10 @@ const OrdersPage = () => {
     end: null,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   const tabs = [
     "All",
@@ -216,6 +243,27 @@ const OrdersPage = () => {
       setExportModal({ isOpen: true, order });
     },
     setFraudCheckModal,
+    async (order) => {
+      try {
+        await convertOrder({ id: order.id }).unwrap();
+        toast.success("Order converted successfully");
+      } catch (err) {
+        toast.error(err?.data?.message || "Failed to convert order");
+      }
+    },
+    (order) => {
+      const phone = order.customer?.phone || order.customerPhone || order.shippingPhone || "";
+      if (!phone) {
+        toast.error("Customer phone number not found");
+        return;
+      }
+      const message = `Hello ${order.customerName || "Customer"}, we noticed you were interested in some items on our store but didn't finish your order. Is there anything we can help you with?`;
+      const waUrl = `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+    },
+    (order) => {
+      setEmailModal({ isOpen: true, order });
+    }
   );
 
   // Build the list of courier keys available to the logged-in user
@@ -556,6 +604,25 @@ const OrdersPage = () => {
     toast.success(t("orders.exportSuccess") || "Orders exported successfully");
   };
 
+  const onEmailSubmit = async (values) => {
+    const payload = {
+      subject: values.subject.trim(),
+      body: values.body.trim(),
+      html: values.html?.trim(),
+      customerIds: [emailModal.order?.customerId],
+      ...(smtpConfig.smtpUser ? { smtpUser: smtpConfig.smtpUser } : {}),
+      ...(smtpConfig.smtpPass ? { smtpPass: smtpConfig.smtpPass } : {}),
+    };
+
+    try {
+      await sendEmail(payload).unwrap();
+      toast.success(t("customers.notifications.emailSuccessFallback"));
+      setEmailModal({ isOpen: false, order: null });
+    } catch (error) {
+      toast.error(error?.data?.message || t("customers.notifications.emailFailedFallback"));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-neutral-950 p-6 space-y-8">
       <OrdersHeader
@@ -566,9 +633,11 @@ const OrdersPage = () => {
         handleExport={handleExport}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        title={defaultTab === "Incomplete" ? (t("orders.incompleteTitle") || "Incomplete Orders") : undefined}
+        subtitle={defaultTab === "Incomplete" ? (t("orders.incompleteSubtitle") || "Follow up with customers who didn't complete their checkout") : undefined}
       />
 
-      <OrdersStats stats={stats} />
+      {defaultTab !== "Incomplete" && <OrdersStats stats={stats} />}
 
       <OrdersTableSection
         filteredOrders={filteredOrders}
@@ -585,6 +654,7 @@ const OrdersPage = () => {
         setSortOrder={setSortOrder}
         headers={headers}
         tableData={tableData}
+        hideTabs={defaultTab === "Incomplete"}
       />
 
       <ProcessOrderModal
@@ -693,7 +763,101 @@ const OrdersPage = () => {
         onClose={() => setFraudCheckModal({ isOpen: false, order: null })}
         order={fraudCheckModal.order}
       />
+
+      <EmailFollowUpModal
+        isOpen={emailModal.isOpen}
+        onClose={() => setEmailModal({ isOpen: false, order: null })}
+        order={emailModal.order}
+        onConfirm={onEmailSubmit}
+        isLoading={isSendingEmail}
+      />
     </div>
+  );
+};
+
+const EmailFollowUpModal = ({ isOpen, onClose, order, onConfirm, isLoading }) => {
+  const { t } = useTranslation();
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm({
+    defaultValues: {
+      subject: t("orders.emailFollowUpSubject") || "Follow up on your order",
+      body: t("orders.emailFollowUpBody", { name: order?.customerName || "Customer" }) || `Hello ${order?.customerName || "Customer"},\n\nWe noticed you didn't complete your order. Is there anything we can help you with?\n\nBest regards,\nSupport Team`,
+      html: "",
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen && order) {
+      reset({
+        subject: t("orders.emailFollowUpSubject") || "Follow up on your order",
+        body: t("orders.emailFollowUpBody", { name: order.customerName || "Customer" }) || `Hello ${order.customerName || "Customer"},\n\nWe noticed you didn't complete your order. Is there anything we can help you with?\n\nBest regards,\nSupport Team`,
+        html: "",
+      });
+    }
+  }, [isOpen, order, reset, t]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t("orders.emailFollowUpTitle") || "Send Follow-up Email"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onConfirm)} className="space-y-4">
+          <TextField
+            label="Customer Email"
+            value={order?.customerEmail || order?.customer?.email || "N/A"}
+            disabled
+          />
+          <TextField
+            label="Subject"
+            register={register}
+            name="subject"
+            error={errors.subject}
+            registerOptions={{ required: "Subject is required" }}
+          />
+          <TextField
+            label="Plain Text Body"
+            multiline
+            rows={4}
+            register={register}
+            name="body"
+            error={errors.body}
+            registerOptions={{ required: "Body is required" }}
+          />
+          <Controller
+            name="html"
+            control={control}
+            render={({ field }) => (
+              <RichTextEditor
+                label="HTML Body (Optional)"
+                value={field.value}
+                onChange={field.onChange}
+                height="250px"
+              />
+            )}
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button type="submit" disabled={isLoading} className="gap-2">
+              <Send className="w-4 h-4" />
+              {isLoading ? (t("common.sending") || "Sending...") : (t("common.sendEmail") || "Send Email")}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

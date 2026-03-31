@@ -8,6 +8,7 @@ import CustomerFilters from "./components/CustomerFilters";
 import CustomerStatsSection from "./components/CustomerStatsSection";
 import CustomerTableSection from "./components/CustomerTableSection";
 import { exportCustomersToPDF } from "@/utils/pdfExport";
+import { exportCustomersToExcel } from "@/utils/excelExport";
 import { useSelector } from "react-redux";
 import {
   Users,
@@ -221,13 +222,27 @@ const CustomersPage = () => {
     ];
   }, [stats, t, userTrend, bannedTrend]);
 
-  const handleExport = () => {
+  const handleExport = (type = "pdf") => {
     if (!users?.length) {
       toast.error(t("customers.noCustomersExport"));
       return;
     }
 
-    exportCustomersToPDF(users, t("customers.title"));
+    if (type === "excel") {
+      exportCustomersToExcel(users, t("customers.title"));
+    } else if (type === "excel-name-phone") {
+      exportCustomersToExcel(users, `${t("customers.title")}_Name_Phone`, [
+        "Name",
+        "Phone",
+      ]);
+    } else if (type === "excel-name-email") {
+      exportCustomersToExcel(users, `${t("customers.title")}_Name_Email`, [
+        "Name",
+        "Email",
+      ]);
+    } else {
+      exportCustomersToPDF(users, t("customers.title"));
+    }
   };
 
   return (

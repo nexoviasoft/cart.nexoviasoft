@@ -26,6 +26,7 @@ const OrdersTableSection = ({
   setSortOrder,
   headers,
   tableData,
+  hideTabs = false,
 }) => {
   const { t } = useTranslation();
 
@@ -54,42 +55,45 @@ const OrdersTableSection = ({
       )}
       
       <div className="flex items-center justify-between">
-        <div className="flex items-center p-1 bg-gray-100/50 dark:bg-neutral-900/50 rounded-2xl w-fit overflow-x-auto">
-          {tabs.map((tab) => {
-            const tabLabel = tab === "All" 
-              ? t("common.all") || "All"
-              : tab === "Pending"
-              ? t("orders.filterPending") || tab
-              : tab === "Processing"
-              ? t("orders.filterProcessing") || tab
-              : tab === "Paid"
-              ? t("orders.filterPaid") || tab
-              : tab === "Shipped"
-              ? t("orders.filterShipped") || tab
-              : tab === "Delivered"
-              ? t("orders.filterDelivered") || tab
-              : tab === "Cancelled"
-              ? t("orders.filterCancelled") || tab
-              : tab === "Refunded"
-              ? t("orders.filterRefunded") || tab
-              : tab === "Unpaid"
-              ? t("orders.statsUnpaid") || tab
-              : tab;
-            
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab ? "bg-white dark:bg-neutral-800 shadow-sm text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
-              >
-                <span>{tabLabel}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${activeTab === tab ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300" : "bg-gray-300 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
-                  {tabCounts[tab] || 0}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {!hideTabs && (
+          <div className="flex items-center p-1 bg-gray-100/50 dark:bg-neutral-900/50 rounded-2xl w-fit overflow-x-auto">
+            {tabs.map((tab) => {
+              const tabLabel = tab === "All" 
+                ? t("common.all") || "All"
+                : tab === "Pending"
+                ? t("orders.filterPending") || tab
+                : tab === "Processing"
+                ? t("orders.filterProcessing") || tab
+                : tab === "Paid"
+                ? t("orders.filterPaid") || tab
+                : tab === "Shipped"
+                ? t("orders.filterShipped") || tab
+                : tab === "Delivered"
+                ? t("orders.filterDelivered") || tab
+                : tab === "Cancelled"
+                ? t("orders.filterCancelled") || tab
+                : tab === "Refunded"
+                ? t("orders.filterRefunded") || tab
+                : tab === "Unpaid"
+                ? t("orders.statsUnpaid") || tab
+                : tab;
+              
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === tab ? "bg-white dark:bg-neutral-800 shadow-sm text-gray-900 dark:text-white" : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
+                >
+                  <span>{tabLabel}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${activeTab === tab ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300" : "bg-gray-300 dark:bg-gray-800 text-gray-600 dark:text-gray-400"}`}>
+                    {tabCounts[tab] || 0}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {hideTabs && <div />}
 
         <div className="flex items-center gap-2">
           <DropdownMenu>

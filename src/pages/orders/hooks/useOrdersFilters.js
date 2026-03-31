@@ -5,7 +5,11 @@ const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dat
     let result = orders;
 
     // Tab filtering based on order status
-    if (activeTab === "Pending") {
+    if (activeTab === "All") {
+      result = result.filter(
+        (o) => (o.status?.toLowerCase() || "") !== "incomplete",
+      );
+    } else if (activeTab === "Pending") {
       result = result.filter(
         (o) => (o.status?.toLowerCase() || "") === "pending",
       );
@@ -34,7 +38,7 @@ const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dat
         (o) => (o.status?.toLowerCase() || "") === "refunded",
       );
     } else if (activeTab === "Unpaid") {
-      result = result.filter((o) => !o.isPaid);
+      result = result.filter((o) => !o.isPaid && o.status?.toLowerCase() !== "incomplete");
     }
 
     // Search filtering

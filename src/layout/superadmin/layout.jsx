@@ -22,7 +22,7 @@ const SuperAdminLayout = () => {
       )}
       
       {/* Mobile Sidebar Drawer */}
-      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[280px] bg-white dark:bg-[#09090b] border-r border-gray-200 dark:border-[#27272a] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 bottom-0 z-50 w-[280px] bg-white dark:bg-[#09090b] border-r border-gray-200 dark:border-[#27272a] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden no-print ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
          <SuperAdminSideNav onLinkClick={() => setIsMobileMenuOpen(false)} />
       </div>
 
@@ -30,13 +30,13 @@ const SuperAdminLayout = () => {
         <div className="lg:px-0">
           <div className="lg:grid lg:grid-cols-[260px_1fr]">
             {/* Sidebar (fixed for desktop) - Super Admin only */}
-            <div className="hidden lg:block sticky top-0 h-screen overflow-y-auto border-r border-gray-200 dark:border-[#27272a] bg-white dark:bg-[#09090b]">
+            <div className="hidden lg:block sticky top-0 h-screen overflow-y-auto border-r border-gray-200 dark:border-[#27272a] bg-white dark:bg-[#09090b] no-print">
               <SuperAdminSideNav />
             </div>
 
             {/* Content area */}
             <div className="flex flex-col min-w-0 min-h-screen">
-              <div className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/70 dark:bg-[#09090b]/80 border-b border-gray-200/50 dark:border-white/5 supports-[backdrop-filter]:bg-white/60">
+              <div className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/70 dark:bg-[#09090b]/80 border-b border-gray-200/50 dark:border-white/5 supports-[backdrop-filter]:bg-white/60 no-print">
                 <SuperAdminTopNavbar setIsMobileMenuOpen={setIsMobileMenuOpen} />
               </div>
               <div className="p-4 md:p-6 lg:p-8 overflow-x-hidden w-full mx-auto max-w-[1600px]">

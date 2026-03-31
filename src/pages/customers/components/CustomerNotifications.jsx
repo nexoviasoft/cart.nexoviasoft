@@ -19,6 +19,7 @@ import {
     useSendCustomerEmailNotificationMutation,
     useSendCustomerSmsNotificationMutation,
 } from "@/features/notifications/notificationsApiSlice";
+import { useGetSettingsQuery } from "@/features/setting/settingApiSlice";
 import { hasPermission, FeaturePermission } from "@/constants/feature-permission";
 
 function CustomerNotifications() {
@@ -29,6 +30,9 @@ function CustomerNotifications() {
 
     const hasEmailPermission = hasPermission(user, FeaturePermission.EMAIL_CONFIGURATION);
     const hasSmsPermission = hasPermission(user, FeaturePermission.SMS_CONFIGURATION);
+
+    const { data: settings = [] } = useGetSettingsQuery();
+    const smtpConfig = settings?.[0] || {};
 
     const {
         register: registerEmail,
@@ -66,6 +70,8 @@ function CustomerNotifications() {
             subject: values.subject.trim(),
             body: values.body.trim(),
             ...(html ? { html } : {}),
+            ...(smtpConfig.smtpUser ? { smtpUser: smtpConfig.smtpUser } : {}),
+            ...(smtpConfig.smtpPass ? { smtpPass: smtpConfig.smtpPass } : {}),
         };
 
         try {
