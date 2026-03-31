@@ -191,7 +191,8 @@
     "settingsNotifications": "Notifications",
     "myCash": "My Cash",
     "income": "Income",
-    "expense": "Expense"
+    "expense": "Expense",
+    "incompleteOrders": "Incomplete Orders"
   },
   "search": {
     "placeholder": "Search orders, products, customers...",
@@ -724,7 +725,11 @@
     "remaining": "Remaining",
     "recordPayment": "Record Payment",
     "partialPaymentRecorded": "Partial payment recorded",
-    "partialPaymentFailed": "Failed to record partial payment"
+    "partialPaymentFailed": "Failed to record partial payment",
+    "incompleteTitle": "Incomplete Orders",
+    "incompleteSubtitle": "Follow up with customers who didn't complete their checkout",
+    "amountRequired": "Amount is required",
+    "amountExceedsRemaining": "Amount exceeds remaining balance"
   },
   "creditNotes": {
     "title": "Refunds & Cancelled Orders",

@@ -46,6 +46,11 @@ const SidebarMenu = () => {
               return null;
             }
 
+            // If the section itself has a permission gate, check it first
+            if (section.permission && !hasPermission(user, section.permission)) {
+              return null;
+            }
+
             // For reseller role, hide specific items from the Orders section
             let sectionItems = section.items || [];
             if (user.role === "RESELLER" && section.id === "orders") {

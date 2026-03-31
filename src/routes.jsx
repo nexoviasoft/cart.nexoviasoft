@@ -49,6 +49,7 @@ import OrderTrackPage from "./pages/orders/track";
 import OrderViewPage from "./pages/orders/_id";
 
 import OrderEditPage from "./pages/orders/_id/edit";
+import IncompleteOrdersPage from "./pages/incomplete-orders";
 import InvoicesPage from "./pages/invoices";
 import CreateInvoicePage from "./pages/invoices/create";
 import SaleInvoiceDetailsPage from "./pages/invoices/[id]/details";
@@ -486,6 +487,14 @@ export const routes = createBrowserRouter([
         element: (
           <PermissionRoute>
             <ExpensePage />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "/incomplete-orders",
+        element: (
+          <PermissionRoute permission={FeaturePermission.INCOMPLETE_ORDERS}>
+            <IncompleteOrdersPage />
           </PermissionRoute>
         ),
       },

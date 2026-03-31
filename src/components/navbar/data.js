@@ -129,7 +129,14 @@ export const navSections = [
         permission: FeaturePermission.ORDERS,
         icon: ClipboardList,
       },
-
+      {
+        id: 6.1,
+        title: "Incomplete Orders",
+        tKey: "nav.incompleteOrders",
+        link: "/incomplete-orders",
+        permission: FeaturePermission.INCOMPLETE_ORDERS,
+        icon: XCircle,
+      },
       {
         id: 7.0,
         title: "Credit Notes",
@@ -199,12 +206,14 @@ export const navSections = [
     title: "My Cash",
     tKey: "nav.myCash",
     icon: Wallet,
+    permission: FeaturePermission.MY_CASH,
     items: [
       {
         id: 20.1,
         title: "Income",
         tKey: "nav.income",
         link: "/my-cash/income",
+        permission: FeaturePermission.MY_CASH,
         icon: TrendingUp,
       },
       {
@@ -212,6 +221,7 @@ export const navSections = [
         title: "Expense",
         tKey: "nav.expense",
         link: "/my-cash/expense",
+        permission: FeaturePermission.MY_CASH,
         icon: TrendingDown,
       },
     ],

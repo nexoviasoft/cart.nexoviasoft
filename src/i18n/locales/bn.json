@@ -186,7 +186,8 @@
     "settingsNotifications": "নোটিফিকেশন",
     "myCash": "আমার ক্যাশ",
     "income": "আয়",
-    "expense": "ব্যয়"
+    "expense": "ব্যয়",
+    "incompleteOrders": "অসম্পূর্ণ অর্ডার"
   },
   "search": {
     "placeholder": "অর্ডার, পণ্য, গ্রাহক খুঁজুন...",
@@ -704,8 +705,21 @@
       "shippingAddressMax": "শিপিং ঠিকানা ৫০০ অক্ষরের কম হতে হবে",
       "paymentRefMax": "পেমেন্ট রেফারেন্স ১০০ অক্ষরের কম হতে হবে",
       "trackingIdMax": "ট্র্যাকিং আইডি ১০০ অক্ষরের কম হতে হবে",
-      "providerMax": "প্রোভাইডার নাম ১০০ অক্ষরের কম হতে হবে"
-    }
+      "providerMax": "প্রোভাইডার নাম ১০০ অক্ষরের কম হতে হবে",
+      "amountRequired": "পরিমাণ প্রয়োজন",
+      "amountPositive": "পরিমাণ ০ এর বেশি হতে হবে",
+      "amountNumber": "পরিমাণ একটি সংখ্যা হতে হবে",
+      "amountExceedsRemaining": "পরিমাণ অবশিষ্ট ব্যালেন্স অতিক্রম করেছে"
+    },
+    "paymentSummary": "পেমেন্ট সারাংশ",
+    "partialAmount": "পরিমাণ",
+    "paidAmount": "পরিশোধিত",
+    "remaining": "অবশিষ্ট",
+    "recordPayment": "পেমেন্ট রেকর্ড করুন",
+    "partialPaymentRecorded": "আংশিক পেমেন্ট রেকর্ড হয়েছে",
+    "partialPaymentFailed": "আংশিক পেমেন্ট রেকর্ড করতে ব্যর্থ",
+    "incompleteTitle": "অসম্পূর্ণ অর্ডার",
+    "incompleteSubtitle": "যেসব গ্রাহক চেকআউট সম্পন্ন করেননি তাদের সাথে ফলো আপ করুন"
   },
   "creditNotes": {
     "title": "রিফান্ড ও বাতিল অর্ডার",
