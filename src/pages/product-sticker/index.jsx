@@ -51,16 +51,26 @@ const ProductStickerPage = () => {
     };
 
     const StickerItem = ({ product, isPreview = false }) => (
-        <div className={`bg-white p-4 w-[300px] text-black flex flex-col items-center justify-center ${isPreview ? 'shadow-2xl border-2 border-dashed border-gray-200' : 'm-2 page-break-inside-avoid'}`}>
-            <div className="w-full flex flex-col items-center transform scale-125 origin-center">
-                <svg className="barcode-element w-full h-auto"></svg>
+        <div className={`bg-white p-3 w-[240px] text-black flex flex-col items-center justify-center rounded-xl bg-gradient-to-b from-white to-gray-50 ${isPreview ? 'shadow-2xl border-2 border-indigo-100' : 'm-2 border border-gray-200 shadow-sm page-break-inside-avoid'}`}>
+            <div className="w-full text-center pb-2 mb-2 border-b border-gray-200">
+                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Premium Quality</p>
+                <p className="text-[12px] font-bold text-gray-900 leading-tight mt-1 px-2 line-clamp-2">{product?.name}</p>
             </div>
-            {isPreview && (
-                <div className="mt-4 text-center">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{product.name}</p>
-                    <p className="text-[8px] text-gray-300">Barcode Only Mode</p>
+            
+            <div className="w-full flex flex-col items-center">
+                <svg className="barcode-element w-full h-[50px]"></svg>
+            </div>
+            
+            <div className="w-full flex justify-between items-end mt-2 pt-2 border-t border-gray-100">
+                <div>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase">SKU / ITEM CODE</p>
+                    <p className="text-[10px] font-bold text-gray-700">{product?.sku}</p>
                 </div>
-            )}
+                <div className="text-right">
+                    <p className="text-[8px] font-bold text-gray-400 uppercase">MSRP</p>
+                    <p className="text-[14px] font-black text-gray-900">৳ {product?.price}</p>
+                </div>
+            </div>
         </div>
     );
 

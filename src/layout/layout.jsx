@@ -7,6 +7,7 @@ import { useDispatch } from "react-redux";
 import { userDetailsFetched } from "@/features/auth/authSlice";
 import { useSearch } from "@/contexts/SearchContext";
 import Footer from "@/components/footer/footer";
+import GlobalBarcodeScanner from "@/components/GlobalBarcodeScanner";
 
 const Layout = () => {
   const dispatch = useDispatch();
@@ -52,6 +53,9 @@ const Layout = () => {
           </div>
         )}
       </div>
+      
+      {/* Global listeners and hidden utilities */}
+      <GlobalBarcodeScanner />
     </main>
   );
 };

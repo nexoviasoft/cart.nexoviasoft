@@ -23,7 +23,12 @@ import {
   Download,
 } from "lucide-react";
 import BdtIcon from "@/components/icons/BdtIcon";
-import { useGetOrderQuery, useProcessOrderMutation } from "@/features/order/orderApiSlice";
+import { useGetOrderQuery, useProcessOrderMutation, useShipOrderMutation } from "@/features/order/orderApiSlice";
+import { useCreateOrderMutation as useSteadfastCreateOrderMutation } from "@/features/steadfast/steadfastApiSlice";
+import { useCreateOrderMutation as usePathaoCreateOrderMutation } from "@/features/pathao/pathaoApiSlice";
+import { useCreateParcelMutation as useRedxCreateParcelMutation } from "@/features/redx/redxApiSlice";
+import { hasPermission, FeaturePermission } from "@/constants/feature-permission";
+import ExportCourierConfirmModal from "../components/ExportCourierConfirmModal";
 import { useSelector } from "react-redux";
 import {
   Dialog,
@@ -42,7 +47,132 @@ const OrderViewPage = () => {
   const isReseller = authUser?.role === "RESELLER";
   const { data: order, isLoading, error } = useGetOrderQuery(parseInt(id));
   const [processOrder, { isLoading: isProcessing }] = useProcessOrderMutation();
+  const [shipOrder] = useShipOrderMutation();
+  const [steadfastCreateOrder] = useSteadfastCreateOrderMutation();
+  const [pathaoCreateOrder] = usePathaoCreateOrderMutation();
+  const [redxCreateParcel] = useRedxCreateParcelMutation();
   const [processModal, setProcessModal] = useState(false);
+  const [exportModal, setExportModal] = useState(false);
+
+  const availableCouriers = React.useMemo(() => {
+    const list = [];
+    if (hasPermission(authUser, FeaturePermission.STEARDFAST) || hasPermission(authUser, FeaturePermission.STEADFAST_COURIER)) list.push("steadfast");
+    if (hasPermission(authUser, FeaturePermission.PATHAO) || hasPermission(authUser, FeaturePermission.PATHAO_COURIER)) list.push("pathao");
+    if (hasPermission(authUser, FeaturePermission.REDX) || hasPermission(authUser, FeaturePermission.REDX_COURIER)) list.push("redx");
+    return list;
+  }, [authUser]);
+
+  const performExportCourier = async (courierKey) => {
+    if (!order) return;
+    const items = order.orderItems || order.items || [];
+    const itemDescription = items.map((item) => item.productName || item.name || item.product?.name || "Product").join(", ") || "";
+
+    if (courierKey === "steadfast") {
+      try {
+        const formData = {
+          invoice: order.id?.toString() || "",
+          recipient_name: order.customer?.name || order.customerName || "",
+          recipient_phone: order.customer?.phone || order.shippingPhone || "",
+          alternative_phone: order.customer?.phone || "",
+          recipient_email: order.customer?.email || order.customerEmail || "",
+          recipient_address: order.customerAddress || order.billingAddress || "",
+          cod_amount: order.totalAmount ? Number(order.totalAmount) : 0,
+          note: order.notes || "",
+          item_description: itemDescription,
+          total_lot: items?.length ? Number(items.length) : 1,
+          delivery_type: 0,
+        };
+        const result = await steadfastCreateOrder(formData).unwrap();
+        if (result.status === 200) {
+          toast.success(result.message || t("steadfast.orderCreatedSuccess", "Order created on Steadfast!"));
+          const trackingCode = result.consignment?.tracking_code || result.tracking_code;
+          const consignmentId = result.consignment?.consignment_id || result.consignment_id;
+          try {
+            await shipOrder({
+              id: order.id,
+              body: { shippingTrackingId: trackingCode || consignmentId || "", shippingProvider: "Steadfast", status: "shipped" },
+            }).unwrap();
+            toast.success(t("steadfast.orderStatusUpdated", "Order status updated to Shipped"));
+          } catch {
+            toast.error(t("steadfast.orderCreatedStatusFailed", "Order created but failed to update status"));
+          }
+        } else {
+          toast.error(result?.data?.message || t("steadfast.createOrderFailed", "Failed to create Steadfast order"));
+        }
+      } catch (error) {
+        toast.error(error?.data?.message || t("steadfast.createOrderFailed", "Failed to create Steadfast order"));
+      }
+      return;
+    }
+
+    if (courierKey === "pathao") {
+      try {
+        const formData = {
+          store_id: localStorage.getItem("pathaoStoreId") || undefined,
+          merchant_order_id: order.id?.toString() || "",
+          recipient_name: order.customer?.name || order.customerName || "",
+          recipient_phone: order.customer?.phone || order.shippingPhone || "",
+          recipient_address: order.customerAddress || order.billingAddress || "",
+          recipient_city: 1,
+          recipient_zone: 1,
+          delivery_type: 48,
+          item_type: 2,
+          special_instruction: order.notes || "",
+          item_quantity: items?.length || 1,
+          item_weight: 0.5,
+          amount_to_collect: order.totalAmount ? Number(order.totalAmount) : 0,
+          item_description: itemDescription,
+        };
+        const result = await pathaoCreateOrder(formData).unwrap();
+        const consignmentId = result?.data?.consignment_id || result?.consignment_id;
+        const trackingCode = result?.data?.order_tracking_code || result?.order_tracking_code;
+        toast.success(t("pathao.orderCreatedSuccess", "Order created on Pathao!"));
+        try {
+          await shipOrder({
+            id: order.id,
+            body: { shippingTrackingId: trackingCode || consignmentId || "", shippingProvider: "Pathao", status: "shipped" },
+          }).unwrap();
+          toast.success(t("pathao.orderStatusUpdated", "Order status updated to Shipped"));
+        } catch {
+          toast.error(t("pathao.orderCreatedStatusFailed", "Order created but failed to update status"));
+        }
+      } catch (error) {
+        toast.error(error?.data?.message || t("pathao.createOrderFailed", "Failed to create Pathao order"));
+      }
+      return;
+    }
+
+    if (courierKey === "redx") {
+      try {
+        const formData = {
+          customer_name: order.customer?.name || order.customerName || "",
+          customer_phone: order.customer?.phone || order.shippingPhone || "",
+          delivery_area: order.customerAddress || order.billingAddress || "",
+          delivery_area_id: localStorage.getItem("redxAreaId") || 508,
+          merchant_invoice_id: order.id?.toString() || "",
+          cash_collection_amount: order.totalAmount ? Number(order.totalAmount) : 0,
+          parcel_weight: 500,
+          instruction: order.notes || "",
+          value: order.totalAmount ? Number(order.totalAmount) : 0,
+        };
+        const result = await redxCreateParcel(formData).unwrap();
+        const trackingId = result?.data?.tracking_id || result?.tracking_id;
+        toast.success(t("redx.orderCreatedSuccess", "Order created on RedX!"));
+        try {
+          await shipOrder({
+            id: order.id,
+            body: { shippingTrackingId: trackingId || "", shippingProvider: "RedX", status: "shipped" },
+          }).unwrap();
+          toast.success(t("redx.orderStatusUpdated", "Order status updated to Shipped"));
+        } catch {
+          toast.error(t("redx.orderCreatedStatusFailed", "Order created but failed to update status"));
+        }
+      } catch (error) {
+        toast.error(error?.data?.message || t("redx.createOrderFailed", "Failed to create RedX order"));
+      }
+      return;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -235,18 +365,29 @@ const OrderViewPage = () => {
             <Button
               onClick={() => setProcessModal(true)}
               disabled={isProcessing}
-              className="flex-1 lg:flex-none h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-medium shadow-lg shadow-amber-500/20 transition-all"
+              className="flex-1 lg:flex-none relative overflow-hidden group h-11 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 border-0 text-white font-bold shadow-lg shadow-orange-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-orange-500/40"
             >
-              <ClipboardCheck className="h-4 w-4 mr-2" />
-              {isProcessing ? t("common.processing") : t("orders.markProcessing", "Mark Processing")}
+              <div className="absolute inset-0 bg-white/20 group-hover:translate-x-full -translate-x-full transition-transform duration-500 ease-out skew-x-12" />
+              <ClipboardCheck className="h-4 w-4 mr-2 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+              <span className="relative z-10">{isProcessing ? t("common.processing") : t("orders.markProcessing", "Mark Processing")}</span>
             </Button>
           )}
           {!isReseller && (
             <>
+              {availableCouriers.length > 0 && (
+                <Button
+                  onClick={() => setExportModal(true)}
+                  className="flex-1 lg:flex-none relative overflow-hidden group h-11 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 text-white font-bold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-indigo-500/40"
+                >
+                  <div className="absolute inset-0 bg-white/20 group-hover:translate-x-full -translate-x-full transition-transform duration-500 ease-out skew-x-12" />
+                  <Truck className="h-4 w-4 mr-2 relative z-10 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="relative z-10">{t("orders.courier", "Send via Courier")}</span>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => navigate(`/orders/${id}/edit`)}
-                className="flex-1 lg:flex-none h-11 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium"
+                className="flex-1 lg:flex-none h-11 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium transition-all"
               >
                 <Edit className="h-4 w-4 mr-2" />
                 {t("common.edit", "Edit Order")}
@@ -260,7 +401,7 @@ const OrderViewPage = () => {
         {/* Main Content Column */}
         <div className="xl:col-span-8 space-y-8">
           {/* Order Items Card */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <motion.div variants={itemVariants} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[32px] border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-slate-200/40 dark:shadow-none overflow-hidden transition-all duration-500 hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 hover:border-indigo-100 dark:hover:border-indigo-900/50">
             <div className="p-8 border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-[18px] bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
@@ -283,7 +424,7 @@ const OrderViewPage = () => {
                 return (
                   <div
                     key={index}
-                    className="group flex flex-col sm:flex-row items-start sm:items-center gap-6 p-4 rounded-[24px] bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-300"
+                    className="group flex flex-col sm:flex-row items-start sm:items-center gap-6 p-5 rounded-[24px] bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/80 hover:border-indigo-300/50 dark:hover:border-indigo-800/50 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1"
                   >
                     <div className="relative">
                       {productImage ? (
@@ -343,7 +484,7 @@ const OrderViewPage = () => {
             </div>
 
             <div className="px-8 pb-8">
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[24px] p-6 space-y-4 border border-slate-100 dark:border-slate-800">
+              <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-[24px] p-6 space-y-4 border border-slate-200/50 dark:border-slate-800/50 shadow-inner">
                 <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
                   <span className="font-medium">{t("orders.subtotal", "Subtotal")}</span>
                   <span className="font-bold">৳{formatAmount(subtotal)}</span>
@@ -371,7 +512,7 @@ const OrderViewPage = () => {
 
           {/* Cancellation Info (Conditional) */}
           {order.status?.toLowerCase() === "cancelled" && order.cancelNote && (
-            <motion.div variants={itemVariants} className="bg-red-50 dark:bg-red-900/10 rounded-[32px] border border-red-100 dark:border-red-900/20 p-8">
+            <motion.div variants={itemVariants} className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-md rounded-[32px] border border-red-200/50 dark:border-red-500/20 p-8 shadow-2xl shadow-red-500/5">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-2xl">
                   <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -392,7 +533,7 @@ const OrderViewPage = () => {
         {/* Sidebar Column */}
         <div className="xl:col-span-4 space-y-8">
           {/* Customer Card */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-[32px] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <motion.div variants={itemVariants} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[32px] p-8 border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-slate-200/40 dark:shadow-none transition-all duration-500 hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 hover:border-indigo-100 dark:hover:border-indigo-900/50">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-[18px] bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm">
                 <User className="w-6 h-6" />
@@ -461,7 +602,7 @@ const OrderViewPage = () => {
           </motion.div>
 
           {/* Shipping & Address Card */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-[32px] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <motion.div variants={itemVariants} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[32px] p-8 border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-slate-200/40 dark:shadow-none transition-all duration-500 hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 hover:border-indigo-100 dark:hover:border-indigo-900/50">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-[18px] bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm">
                 <Truck className="w-6 h-6" />
@@ -492,7 +633,7 @@ const OrderViewPage = () => {
               )}
 
               <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/60 transition-colors shadow-sm">
                   <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">
                     {t("orders.deliveryType", "Delivery Type")}
                   </p>
@@ -503,7 +644,7 @@ const OrderViewPage = () => {
                 </div>
 
                 {order.shippingTrackingId && (
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                  <div className="p-4 rounded-2xl bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/60 transition-colors shadow-sm">
                     <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">
                       {t("orders.trackingId", "Tracking ID")}
                     </p>
@@ -522,7 +663,7 @@ const OrderViewPage = () => {
           </motion.div>
 
           {/* Payment Card */}
-          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-800 rounded-[32px] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <motion.div variants={itemVariants} className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[32px] p-8 border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-slate-200/40 dark:shadow-none transition-all duration-500 hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 hover:border-indigo-100 dark:hover:border-indigo-900/50">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-[18px] bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
                 <CreditCard className="w-6 h-6" />
@@ -538,7 +679,7 @@ const OrderViewPage = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/50 hover:bg-white/80 dark:hover:bg-slate-800/60 transition-colors shadow-sm">
                 <div>
                   <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">
                     {t("orders.status", "Status")}
@@ -597,7 +738,7 @@ const OrderViewPage = () => {
           {order.orderInfo && (
             <motion.div
               variants={itemVariants}
-              className="bg-white dark:bg-slate-800 rounded-[32px] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-none"
+              className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-[32px] p-8 border border-slate-200/50 dark:border-slate-700/50 shadow-2xl shadow-slate-200/40 dark:shadow-none transition-all duration-500 hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5 hover:border-indigo-100 dark:hover:border-indigo-900/50"
             >
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-12 h-12 rounded-[18px] bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
@@ -666,6 +807,17 @@ const OrderViewPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ExportCourierConfirmModal
+        isOpen={exportModal}
+        onClose={() => setExportModal(false)}
+        order={order}
+        availableCouriers={availableCouriers}
+        onSelect={async (courierKey) => {
+          await performExportCourier(courierKey);
+          setExportModal(false);
+        }}
+      />
     </motion.div>
   );
 };

@@ -28,8 +28,10 @@ import {
   Cog,
   MessageCircle,
   CheckCircle,
+  Mail,
 } from "lucide-react";
 import { generateParcelSlip } from "@/utils/parcelSlip";
+import { useGetSettingsQuery } from "@/features/setting/settingApiSlice";
 
 const OrderActionsDropdown = ({
   order,
@@ -58,6 +60,9 @@ const OrderActionsDropdown = ({
     "SquadCart";
   const companyLogo =
     authUser?.companyLogo || authUser?.company?.logo || authUser?.logo || null;
+
+  const { data: settings = [] } = useGetSettingsQuery();
+  const setting = settings?.[0] || {};
 
   return (
     <DropdownMenu>
@@ -92,9 +97,25 @@ const OrderActionsDropdown = ({
         <DropdownMenuItem
           onClick={async () => {
             try {
+              // Get dynamic tracking URL from settings or API fallback
+              let trackingPageBase = setting?.orderReceiptUrl;
+              
+              if (!trackingPageBase) {
+                const customDomain = authUser?.company?.customDomain || authUser?.customDomain;
+                const subdomain = authUser?.company?.subdomain || authUser?.subdomain;
+                trackingPageBase = window.location.origin;
+                
+                if (customDomain) {
+                  trackingPageBase = `https://${customDomain}`;
+                } else if (subdomain) {
+                  trackingPageBase = `https://${subdomain}.fiberace.com`;
+                }
+              }
+              
               await generateParcelSlip(order, {
                 companyName,
                 companyLogo,
+                trackingPageBase,
               });
               toast.success(
                 t("orders.parcelSlipGenerated") ||
