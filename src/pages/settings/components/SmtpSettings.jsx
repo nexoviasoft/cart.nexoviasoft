@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { Mail, Lock, Save } from "lucide-react";
+import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,11 @@ const SmtpSettings = ({ scope = "company" }) => {
   const [upsertSuperadminSmtp, { isLoading: isSuperadminSaving }] =
     useUpsertSuperadminSmtpMutation();
 
-  const firstSetting = isSuperadminScope ? superadminSetting : (settings?.[0] ?? null);
+  const user = useSelector((state) => state.auth.user);
+
+  const firstSetting = isSuperadminScope 
+    ? superadminSetting 
+    : (settings?.find((s) => s.companyId === user?.companyId) ?? settings?.[0] ?? null);
   const isLoading = isSuperadminScope ? isSuperadminLoading : isCompanyLoading;
   const isSaving = isSuperadminScope ? isSuperadminSaving : isCompanySaving;
 
