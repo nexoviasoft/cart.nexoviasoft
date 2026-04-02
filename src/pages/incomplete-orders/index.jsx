@@ -392,7 +392,10 @@ const IncompleteOrdersPage = () => {
       `আপনার কি কোনো সাহায্য দরকার? আমরা আপনাকে সহায়তা করতে প্রস্তুত! 🙏`,
     ].filter((line) => line !== undefined).join("\n");
 
-    window.open(`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
+    let formattedPhone = phone.replace(/\D/g, "");
+    if (formattedPhone.startsWith("01")) formattedPhone = "88" + formattedPhone;
+
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleEmailSubmit = async (values) => {

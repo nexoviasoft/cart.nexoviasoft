@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dateRange) => {
+const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dateRange, providerFilter = "All") => {
   const filteredOrders = useMemo(() => {
     let result = orders;
 
@@ -39,6 +39,17 @@ const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dat
       );
     } else if (activeTab === "Unpaid") {
       result = result.filter((o) => !o.isPaid && o.status?.toLowerCase() !== "incomplete");
+    }
+
+    // Provider filtering
+    if (providerFilter && providerFilter !== "All") {
+      result = result.filter((o) => {
+        const p = (o.shippingProvider || "").trim().toLowerCase();
+        if (providerFilter === "Manual/System") {
+          return !p || !["steadfast", "pathao", "redx"].includes(p);
+        }
+        return p === providerFilter.toLowerCase();
+      });
     }
 
     // Search filtering
@@ -94,7 +105,7 @@ const useOrdersFilters = (orders, activeTab, searchQuery, sortBy, sortOrder, dat
     });
 
     return sorted;
-  }, [orders, activeTab, searchQuery, sortBy, sortOrder, dateRange]);
+  }, [orders, activeTab, searchQuery, sortBy, sortOrder, dateRange, providerFilter]);
 
   return filteredOrders;
 };

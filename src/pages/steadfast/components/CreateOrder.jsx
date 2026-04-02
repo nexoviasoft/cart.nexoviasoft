@@ -134,17 +134,18 @@ const CreateOrder = () => {
         const trackingCode = result.consignment?.tracking_code || result.tracking_code;
         const consignmentId = result.consignment?.consignment_id || result.consignment_id;
         
-        // Update the order with shipping information if we have a selected order
-        if (selectedOrder && selectedOrder.orderData) {
+        const targetOrderId = selectedOrder?.orderData?.id || data.invoice;
+        
+        // Update the order with shipping information
+        if (targetOrderId && (trackingCode || consignmentId)) {
           try {
             const shipmentData = {
-              shippingTrackingId: trackingCode || consignmentId || "",
-              shippingProvider: "Steadfast",
-              status: "shipped",
+              trackingId: trackingCode || consignmentId || "",
+              provider: "Steadfast",
             };
             
             await shipOrder({
-              id: selectedOrder.orderData.id,
+              id: targetOrderId,
               body: shipmentData,
             }).unwrap();
             

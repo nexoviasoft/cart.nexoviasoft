@@ -85,6 +85,22 @@ export const settingApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: "settings", id: "FRAUD_CHECKER" }],
     }),
+
+    getOrderReceiptUrl: builder.query({
+      query: () => ({ url: "/setting/order-receipt-url", method: "GET" }),
+      transformResponse: (res) => res?.data ?? null,
+      providesTags: [{ type: "settings", id: "ORDER_RECEIPT_URL" }],
+    }),
+
+    upsertOrderReceiptUrl: builder.mutation({
+      query: (body) => ({
+        url: "/setting/order-receipt-url",
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json;charset=UTF-8" },
+      }),
+      invalidatesTags: [{ type: "settings", id: "ORDER_RECEIPT_URL" }],
+    }),
   }),
 });
 
@@ -99,4 +115,6 @@ export const {
   useDeleteSettingMutation,
   useGetFraudCheckerApiQuery,
   useUpsertFraudCheckerApiMutation,
+  useGetOrderReceiptUrlQuery,
+  useUpsertOrderReceiptUrlMutation,
 } = settingApiSlice;

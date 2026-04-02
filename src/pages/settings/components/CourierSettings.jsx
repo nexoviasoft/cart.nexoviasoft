@@ -106,6 +106,9 @@ const CourierSettings = ({ user: userFromApi }) => {
     defaultValues: {
       clientId: "",
       clientSecret: "",
+      username: "",
+      password: "",
+      storeId: "",
     },
   });
 
@@ -138,6 +141,9 @@ const CourierSettings = ({ user: userFromApi }) => {
     resetPathao({
       clientId: user.pathaoConfig?.clientId || "",
       clientSecret: user.pathaoConfig?.clientSecret || "",
+      username: user.pathaoConfig?.username || "",
+      password: user.pathaoConfig?.password || "",
+      storeId: user.pathaoConfig?.storeId || "",
     });
   }, [user, resetPathao]);
 
@@ -168,11 +174,17 @@ const CourierSettings = ({ user: userFromApi }) => {
         pathaoConfig: {
           clientId: data.clientId || "",
           clientSecret: data.clientSecret || "",
+          username: data.username || "",
+          password: data.password || "",
+          storeId: data.storeId || "",
         },
       };
       await updateSystemuser({ id: userId, ...payload }).unwrap();
       localStorage.setItem("pathaoClientId", data.clientId);
       localStorage.setItem("pathaoClientSecret", data.clientSecret);
+      localStorage.setItem("pathaoUsername", data.username);
+      localStorage.setItem("pathaoPassword", data.password);
+      localStorage.setItem("pathaoStoreId", data.storeId);
       dispatch(userDetailsFetched(payload));
       toast.success(t("pathao.credentialsSaved"));
     } catch (e) {
@@ -284,6 +296,33 @@ const CourierSettings = ({ user: userFromApi }) => {
                   placeholder={t("pathao.clientSecretPlaceholder")}
                   watch={watchPathao}
                   type="password"
+                />
+                <CredentialInput
+                  label={t("pathao.username", "Username")}
+                  id="pathao-username"
+                  register={registerPathao}
+                  name="username"
+                  placeholder={t("pathao.usernamePlaceholder", "Enter Pathao Username")}
+                  watch={watchPathao}
+                  type="text"
+                />
+                <CredentialInput
+                  label={t("pathao.password", "Password")}
+                  id="pathao-password"
+                  register={registerPathao}
+                  name="password"
+                  placeholder={t("pathao.passwordPlaceholder", "Enter Pathao Password")}
+                  watch={watchPathao}
+                  type="password"
+                />
+                <CredentialInput
+                  label={t("pathao.storeId", "Store ID")}
+                  id="pathao-store-id"
+                  register={registerPathao}
+                  name="storeId"
+                  placeholder={t("pathao.storeIdPlaceholder", "Enter Pathao Store ID")}
+                  watch={watchPathao}
+                  type="text"
                 />
 
                 <div className="pt-2">

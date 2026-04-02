@@ -47,6 +47,7 @@ import RefundOrderModal from "./components/RefundOrderModal";
 import PartialPaymentModal from "./components/PartialPaymentModal";
 import BarcodeScanModal from "./components/BarcodeScanModal";
 import FraudCheckModal from "./components/FraudCheckModal";
+import OrderTrackModal from "./components/OrderTrackModal";
 import useOrdersFilters from "./hooks/useOrdersFilters";
 import useOrdersTable from "./hooks/useOrdersTable";
 
@@ -132,10 +133,15 @@ const OrdersPage = ({ defaultTab = "All" }) => {
     isOpen: false,
     order: null,
   });
+  const [trackModal, setTrackModal] = useState({
+    isOpen: false,
+    trackingId: "",
+  });
 
   // Filter states
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [searchQuery, setSearchQuery] = useState("");
+  const [providerFilter, setProviderFilter] = useState("All");
   const [sortBy, setSortBy] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [dateRange, setDateRange] = useState({
@@ -193,6 +199,21 @@ const OrdersPage = ({ defaultTab = "All" }) => {
     };
   }, [isReseller, orders, stats]);
 
+  // Calculate generic provider counts
+  const providerCounts = useMemo(() => {
+    const counts = { All: orders.length, Steadfast: 0, Pathao: 0, RedX: 0, "Manual/System": 0 };
+    if (!orders || orders.length === 0) return counts;
+    orders.forEach(o => {
+      const p = (o.shippingProvider || "").trim().toLowerCase();
+      if (!p) { counts["Manual/System"]++; }
+      else if (p === 'steadfast') { counts.Steadfast++; }
+      else if (p === 'pathao') { counts.Pathao++; }
+      else if (p === 'redx') { counts.RedX++; }
+      else { counts["Manual/System"]++; }
+    });
+    return counts;
+  }, [orders]);
+
   // Use custom hook for filtering
   const filteredOrders = useOrdersFilters(
     orders,
@@ -201,6 +222,7 @@ const OrdersPage = ({ defaultTab = "All" }) => {
     sortBy,
     sortOrder,
     dateRange,
+    providerFilter
   );
 
   // Helper function to translate order status
@@ -276,12 +298,15 @@ const OrdersPage = ({ defaultTab = "All" }) => {
         return;
       }
       const message = `Hello ${order.customerName || "Customer"}, we noticed you were interested in some items on our store but didn't finish your order. Is there anything we can help you with?`;
-      const waUrl = `https://wa.me/${phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(message)}`;
+      let formattedPhone = phone.replace(/[^0-9]/g, "");
+      if (formattedPhone.startsWith("01")) formattedPhone = "88" + formattedPhone;
+      const waUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
       window.open(waUrl, "_blank");
     },
     (order) => {
       setEmailModal({ isOpen: true, order });
-    }
+    },
+    (trackingId) => setTrackModal({ isOpen: true, trackingId })
   );
 
   // Build the list of courier keys available to the logged-in user
@@ -346,7 +371,7 @@ const OrdersPage = ({ defaultTab = "All" }) => {
       if (courierKey === "pathao") {
         try {
           const formData = {
-            store_id: localStorage.getItem("pathaoStoreId") || undefined,
+            store_id: parseInt(localStorage.getItem("pathaoStoreId"), 10) || undefined,
             merchant_order_id: order.id?.toString() || "",
             recipient_name: order.customer?.name || order.customerName || "",
             recipient_phone: order.customer?.phone || order.shippingPhone || "",
@@ -358,7 +383,7 @@ const OrdersPage = ({ defaultTab = "All" }) => {
             special_instruction: order.notes || "",
             item_quantity: items?.length || 1,
             item_weight: 0.5,
-            amount_to_collect: order.totalAmount ? Number(order.totalAmount) : 0,
+            amount_to_collect: order.totalAmount ? Math.round(Number(order.totalAmount)) : 0,
             item_description: itemDescription,
           };
           const result = await pathaoCreateOrder(formData).unwrap();
@@ -369,8 +394,8 @@ const OrdersPage = ({ defaultTab = "All" }) => {
             await shipOrder({
               id: order.id,
               body: {
-                shippingTrackingId: trackingCode || consignmentId || "",
-                shippingProvider: "Pathao",
+                trackingId: trackingCode || consignmentId || "",
+                provider: "Pathao",
                 status: "shipped",
               },
             }).unwrap();
@@ -683,6 +708,9 @@ const OrdersPage = ({ defaultTab = "All" }) => {
         setSortBy={setSortBy}
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
+        providerFilter={providerFilter}
+        setProviderFilter={setProviderFilter}
+        providerCounts={providerCounts}
         headers={headers}
         tableData={tableData}
         hideTabs={defaultTab === "Incomplete"}
@@ -801,6 +829,11 @@ const OrdersPage = ({ defaultTab = "All" }) => {
         order={emailModal.order}
         onConfirm={onEmailSubmit}
         isLoading={isSendingEmail}
+      />
+      <OrderTrackModal
+        isOpen={trackModal.isOpen}
+        onClose={() => setTrackModal({ isOpen: false, trackingId: "" })}
+        trackingId={trackModal.trackingId}
       />
     </div>
   );

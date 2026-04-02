@@ -1,13 +1,16 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Pathao Courier API Configuration
-const PATHAO_BASE_URL = "https://hermes-api.pathao.com/api/v1";
+// Using a proxy to bypass CORS restrictions
+const PATHAO_BASE_URL = "/pathao-api/aladdin/api/v1";
 
 // Function to get credentials from localStorage or environment variables
 const getCredentials = () => {
-  const CLIENT_ID = localStorage.getItem("pathaoClientId") || import.meta.env.VITE_PATHAO_CLIENT_ID || "pnel77jdKB";
-  const CLIENT_SECRET = localStorage.getItem("pathaoClientSecret") || import.meta.env.VITE_PATHAO_CLIENT_SECRET || "YMx6Rf6Dls4UoFNizVm2cMlhS5i0ijQacxOtxwlU";
-  return { CLIENT_ID, CLIENT_SECRET };
+  const CLIENT_ID = localStorage.getItem("pathaoClientId")
+  const CLIENT_SECRET = localStorage.getItem("pathaoClientSecret")
+  const USERNAME = localStorage.getItem("pathaoUsername")
+  const PASSWORD = localStorage.getItem("pathaoPassword")
+  return { CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD };
 };
 
 // Store access token in memory
@@ -23,18 +26,20 @@ const getAccessToken = async () => {
 
   // Request new token
   try {
-    const { CLIENT_ID, CLIENT_SECRET } = getCredentials();
-    
-    const response = await fetch("https://hermes-api.pathao.com/api/v1/issue-token", {
+    const { CLIENT_ID, CLIENT_SECRET, USERNAME, PASSWORD } = getCredentials();
+
+    const response = await fetch("/pathao-api/aladdin/api/v1/issue-token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({
         client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        grant_type: "client_credentials",
+        username: USERNAME,
+        password: PASSWORD,
+        grant_type: "password",
       }),
     });
 
@@ -76,7 +81,7 @@ const pathaoBaseQuery = async (args, api, extraOptions) => {
     // Clear cached token and retry
     accessToken = null;
     tokenExpiry = null;
-    
+
     return {
       error: {
         status: 401,

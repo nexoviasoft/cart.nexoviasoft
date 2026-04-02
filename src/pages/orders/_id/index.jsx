@@ -30,6 +30,7 @@ import { useCreateParcelMutation as useRedxCreateParcelMutation } from "@/featur
 import { hasPermission, FeaturePermission } from "@/constants/feature-permission";
 import ExportCourierConfirmModal from "../components/ExportCourierConfirmModal";
 import { useSelector } from "react-redux";
+import { detectFakeOrder } from "@/utils/fakeOrderDetection";
 import {
   Dialog,
   DialogContent,
@@ -90,7 +91,7 @@ const OrderViewPage = () => {
           try {
             await shipOrder({
               id: order.id,
-              body: { shippingTrackingId: trackingCode || consignmentId || "", shippingProvider: "Steadfast", status: "shipped" },
+              body: { trackingId: trackingCode || consignmentId || "", provider: "Steadfast" },
             }).unwrap();
             toast.success(t("steadfast.orderStatusUpdated", "Order status updated to Shipped"));
           } catch {
@@ -108,7 +109,7 @@ const OrderViewPage = () => {
     if (courierKey === "pathao") {
       try {
         const formData = {
-          store_id: localStorage.getItem("pathaoStoreId") || undefined,
+          store_id: parseInt(localStorage.getItem("pathaoStoreId"), 10) || undefined,
           merchant_order_id: order.id?.toString() || "",
           recipient_name: order.customer?.name || order.customerName || "",
           recipient_phone: order.customer?.phone || order.shippingPhone || "",
@@ -120,7 +121,7 @@ const OrderViewPage = () => {
           special_instruction: order.notes || "",
           item_quantity: items?.length || 1,
           item_weight: 0.5,
-          amount_to_collect: order.totalAmount ? Number(order.totalAmount) : 0,
+          amount_to_collect: order.totalAmount ? Math.round(Number(order.totalAmount)) : 0,
           item_description: itemDescription,
         };
         const result = await pathaoCreateOrder(formData).unwrap();
@@ -130,7 +131,7 @@ const OrderViewPage = () => {
         try {
           await shipOrder({
             id: order.id,
-            body: { shippingTrackingId: trackingCode || consignmentId || "", shippingProvider: "Pathao", status: "shipped" },
+            body: { trackingId: trackingCode || consignmentId || "", provider: "Pathao" },
           }).unwrap();
           toast.success(t("pathao.orderStatusUpdated", "Order status updated to Shipped"));
         } catch {
@@ -374,7 +375,7 @@ const OrderViewPage = () => {
           )}
           {!isReseller && (
             <>
-              {availableCouriers.length > 0 && (
+              {availableCouriers.length > 0 && order?.status?.toLowerCase() !== 'shipped' && (
                 <Button
                   onClick={() => setExportModal(true)}
                   className="flex-1 lg:flex-none relative overflow-hidden group h-11 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 border-0 text-white font-bold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-indigo-500/40"
@@ -396,6 +397,32 @@ const OrderViewPage = () => {
           )}
         </div>
       </div>
+
+      {(() => {
+        const fakeCheck = detectFakeOrder(order);
+        if (!fakeCheck.isFake) return null;
+        return (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="bg-rose-50/80 dark:bg-rose-900/20 border border-rose-200/60 dark:border-rose-800/60 backdrop-blur-md rounded-2xl p-5 flex items-start gap-4 shadow-sm"
+          >
+            <div className="p-2.5 bg-rose-100 dark:bg-rose-900/50 rounded-xl shrink-0">
+              <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            </div>
+            <div>
+              <h3 className="text-rose-800 dark:text-rose-300 font-bold mb-1.5 text-lg">
+                {t("orders.suspectedFakeOrder", "Suspected Fake Order")}
+              </h3>
+              <ul className="list-disc list-inside text-sm text-rose-600 dark:text-rose-400 space-y-1 font-medium">
+                {fakeCheck.reasons.map((reason, idx) => (
+                  <li key={idx}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         {/* Main Content Column */}

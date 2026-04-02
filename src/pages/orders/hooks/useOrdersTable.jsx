@@ -4,7 +4,8 @@ import toast from "react-hot-toast";
 import OrderActionsDropdown from "../components/OrderActionsDropdown";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Mail, Cog } from "lucide-react";
+import { MessageCircle, Mail, Cog, AlertTriangle } from "lucide-react";
+import { detectFakeOrder } from "@/utils/fakeOrderDetection";
 
 const useOrdersTable = (
   filteredOrders,
@@ -22,6 +23,7 @@ const useOrdersTable = (
   onConvert,
   onWhatsApp,
   onEmail,
+  onTrackOrder,
 ) => {
   const { t } = useTranslation();
   const authUser = useSelector((state) => state.auth.user);
@@ -46,6 +48,7 @@ const useOrdersTable = (
       { header: t("orders.paid"), field: "paid" },
       { header: t("orders.total"), field: "total" },
       { header: t("orders.trackingId") || "Tracking ID", field: "trackingId" },
+      { header: t("orders.provider") || "Provider", field: "provider" },
       { header: t("orders.items") || "Items", field: "items" },
       { header: t("common.status") || "Fulfilment", field: "status" },
       ...(!isReseller ? [{ header: t("common.actions"), field: "actions" }] : []),
@@ -73,9 +76,20 @@ const useOrdersTable = (
             const phone = o.customer?.phone || o.customerPhone || o.shippingPhone || "";
             const count = customerOrderCount[phone] || 1;
             const isNew = count === 1;
+            const fakeCheck = detectFakeOrder(o);
             return (
               <div className="flex flex-col gap-1">
-                <span className="font-medium text-gray-700 dark:text-gray-300">{name}</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  {name}
+                  {fakeCheck.isFake && (
+                    <span 
+                      className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded cursor-help"
+                      title={fakeCheck.reasons.join("\n")}
+                    >
+                      <AlertTriangle className="w-3 h-3"/> Fake?
+                    </span>
+                  )}
+                </span>
                 <span
                   className={`inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                     isNew
@@ -150,6 +164,15 @@ const useOrdersTable = (
                 )}
               </span>
             </div>
+          ),
+          provider: (
+            o.shippingProvider ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800 capitalize">
+                {o.shippingProvider}
+              </span>
+            ) : (
+              <span className="text-gray-400 dark:text-gray-500">-</span>
+            )
           ),
           items: (
             <span className="text-gray-600 dark:text-gray-400 font-medium">
@@ -232,6 +255,7 @@ const useOrdersTable = (
                 onConvert={() => onConvert?.(o)}
                 onWhatsApp={() => onWhatsApp?.(o)}
                 onEmail={() => onEmail?.(o)}
+                onTrackOrder={onTrackOrder}
               />
             </div>
           ),
@@ -252,6 +276,7 @@ const useOrdersTable = (
       setFraudCheckModal,
       onConvert,
       onWhatsApp,
+      onTrackOrder,
       t,
       isReseller,
     ],

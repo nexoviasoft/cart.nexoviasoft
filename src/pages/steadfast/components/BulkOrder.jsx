@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreateBulkOrdersMutation } from "@/features/steadfast/steadfastApiSlice";
+import { useShipOrderMutation } from "@/features/order/orderApiSlice";
 import toast from "react-hot-toast";
 import {
   Upload,
@@ -14,6 +15,7 @@ import {
 const BulkOrder = () => {
   const { t } = useTranslation();
   const [createBulkOrders, { isLoading }] = useCreateBulkOrdersMutation();
+  const [shipOrder] = useShipOrderMutation();
   const [ordersJson, setOrdersJson] = useState("");
   const [results, setResults] = useState(null);
 
@@ -86,6 +88,32 @@ const BulkOrder = () => {
           failed: errorCount,
         }),
       );
+
+      // Auto update shipments for successful bulk orders
+      if (Array.isArray(result) && result.length > 0) {
+        for (let i = 0; i < result.length; i++) {
+          const res = result[i];
+          if (res.status === "success" || res.status === 200) {
+            const invoice = res.invoice || res.consignment?.invoice || orders[i]?.invoice;
+            const consignmentId = res.consignment?.consignment_id || res.consignment_id;
+            const trackingCode = res.consignment?.tracking_code || res.tracking_code;
+            
+            if (invoice && (consignmentId || trackingCode)) {
+              try {
+                await shipOrder({
+                  id: invoice,
+                  body: {
+                    trackingId: trackingCode || consignmentId || "",
+                    provider: "Steadfast",
+                  }
+                }).unwrap();
+              } catch(err) {
+                console.error("Failed to auto-update via shipOrder", invoice, err);
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
       const errorMessage =
         error?.data?.message || t("steadfast.bulkOrderFailed");

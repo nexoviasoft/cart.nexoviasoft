@@ -19,4 +19,13 @@ export default defineConfig({
   preview: {
     allowedHosts: true,
   },
+  server: {
+    proxy: {
+      "/pathao-api": {
+        target: "https://api-hermes.pathao.com", // PLEASE DO NOT CHANGE THIS! hermes-api DOES NOT EXIST.
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/pathao-api/, ""),
+      },
+    },
+  },
 });

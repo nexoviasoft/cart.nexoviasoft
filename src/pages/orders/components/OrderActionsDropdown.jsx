@@ -47,6 +47,7 @@ const OrderActionsDropdown = ({
   onConvert,
   onWhatsApp,
   onEmail,
+  onTrackOrder,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -76,12 +77,16 @@ const OrderActionsDropdown = ({
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuItem
           onClick={() => navigator.clipboard.writeText(order.id)}
+          className="text-slate-600 dark:text-slate-400 focus:text-slate-700"
         >
           <Copy className="mr-2 h-4 w-4" />
           Copy Order ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}`)}>
+        <DropdownMenuItem 
+          onClick={() => navigate(`/orders/${order.id}`)}
+          className="text-sky-600 dark:text-sky-400 focus:text-sky-600 font-medium"
+        >
           <Eye className="mr-2 h-4 w-4" />
           View Details
         </DropdownMenuItem>
@@ -97,10 +102,12 @@ const OrderActionsDropdown = ({
         <DropdownMenuItem
           onClick={async () => {
             try {
-              // Get dynamic tracking URL from settings or API fallback
               let trackingPageBase = setting?.orderReceiptUrl;
+              let isCustomReceiptUrl = false;
               
-              if (!trackingPageBase) {
+              if (trackingPageBase) {
+                isCustomReceiptUrl = true;
+              } else {
                 const customDomain = authUser?.company?.customDomain || authUser?.customDomain;
                 const subdomain = authUser?.company?.subdomain || authUser?.subdomain;
                 trackingPageBase = window.location.origin;
@@ -116,6 +123,7 @@ const OrderActionsDropdown = ({
                 companyName,
                 companyLogo,
                 trackingPageBase,
+                isCustomReceiptUrl,
               });
               toast.success(
                 t("orders.parcelSlipGenerated") ||
@@ -129,7 +137,7 @@ const OrderActionsDropdown = ({
               );
             }
           }}
-          className="cursor-pointer"
+          className="cursor-pointer text-purple-600 dark:text-purple-400 focus:text-purple-600 font-medium"
         >
           <Download className="mr-2 h-4 w-4" />
           {t("orders.printParcelSlip") || "Print Parcel Slip"}
@@ -162,28 +170,40 @@ const OrderActionsDropdown = ({
         {!isReseller && (order.status?.toLowerCase() === "pending" ||
           order.status?.toLowerCase() === "incomplete" ||
           !order.status) && (
-          <DropdownMenuItem onClick={onProcess}>
+          <DropdownMenuItem 
+            onClick={onProcess}
+            className="text-indigo-600 dark:text-indigo-400 focus:text-indigo-600 font-medium"
+          >
             <Cog className="mr-2 h-4 w-4" />
             Mark as Processing
           </DropdownMenuItem>
         )}
+        {!isReseller && order.shippingTrackingId && ["processing", "shipped", "delivered", "paid", "completed"].includes(order.status?.toLowerCase()) && (
+          <DropdownMenuItem
+            onClick={() => {
+              if (onTrackOrder) {
+                onTrackOrder(order.shippingTrackingId);
+              }
+            }}
+            className="text-fuchsia-600 dark:text-fuchsia-400 focus:text-fuchsia-600 font-medium"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            {t("orders.trackOrder") || "Track Order"}
+          </DropdownMenuItem>
+        )}
         {!isReseller && order.status?.toLowerCase() === "processing" && (
           <>
-            {order.shippingTrackingId && (
-              <DropdownMenuItem
-                onClick={() => {
-                  navigate(`/orders/track?trackingId=${encodeURIComponent(order.shippingTrackingId)}`);
-                }}
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                {t("orders.trackOrder")}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={onExportCourier}>
+            <DropdownMenuItem 
+              onClick={onExportCourier}
+              className="text-amber-600 dark:text-amber-400 focus:text-amber-600 font-medium"
+            >
               <Truck className="mr-2 h-4 w-4" />
               {t("orders.exportCourier") || "Export Courier"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onShip}>
+            <DropdownMenuItem 
+              onClick={onShip}
+              className="text-blue-600 dark:text-blue-400 focus:text-blue-600 font-medium"
+            >
               <Ship className="mr-2 h-4 w-4" />
               Mark as Shipped
             </DropdownMenuItem>
@@ -191,13 +211,16 @@ const OrderActionsDropdown = ({
         )}
         {!isReseller && order.status?.toLowerCase() === "shipped" && (
           <>
-            <DropdownMenuItem onClick={onDeliver}>
+            <DropdownMenuItem 
+              onClick={onDeliver}
+              className="text-emerald-600 dark:text-emerald-400 focus:text-emerald-600 font-medium"
+            >
               <Package className="mr-2 h-4 w-4" />
               Mark as Delivered
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onCancel}
-              className="text-red-600 focus:text-red-600"
+              className="text-rose-600 dark:text-rose-400 focus:text-rose-600 font-bold"
             >
               <XCircle className="mr-2 h-4 w-4" />
               {t("orders.cancelOrder")}
@@ -207,7 +230,7 @@ const OrderActionsDropdown = ({
         {!isReseller && order.status?.toLowerCase() === "cancelled" && (
           <DropdownMenuItem
             onClick={onRefund}
-            className="text-orange-600 focus:text-orange-600"
+            className="text-orange-600 dark:text-orange-400 focus:text-orange-600 font-bold"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             {t("orders.refundOrder")}
@@ -215,7 +238,10 @@ const OrderActionsDropdown = ({
         )}
         {!isReseller && !order.isPaid &&
           order.status?.toLowerCase() !== "cancelled" && (
-            <DropdownMenuItem onClick={onPartialPayment}>
+            <DropdownMenuItem 
+              onClick={onPartialPayment}
+              className="text-teal-600 dark:text-teal-400 focus:text-teal-600 font-medium"
+            >
               <CreditCard className="mr-2 h-4 w-4" />
               Record Payment
             </DropdownMenuItem>
@@ -225,7 +251,7 @@ const OrderActionsDropdown = ({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={onDelete}
-              className="text-red-600 focus:text-red-600"
+              className="text-red-600 dark:text-red-400 focus:text-red-600 font-bold"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Order

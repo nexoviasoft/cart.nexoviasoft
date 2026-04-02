@@ -221,6 +221,7 @@ export const productApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetProductsQuery,
+  useLazyGetProductsQuery,
   useGetProductQuery,
   useCreateProductMutation,
   useUpdateProductMutation,

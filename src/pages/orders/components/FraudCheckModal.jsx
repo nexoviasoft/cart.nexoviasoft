@@ -135,6 +135,48 @@ const FraudCheckModal = ({ isOpen, onClose, order }) => {
                         ))}
                       </ul>
                     )}
+
+                    <div className="pt-2 border-t border-gray-100 dark:border-neutral-700"></div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 bg-gray-50 dark:bg-neutral-900 rounded-xl text-center">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Total</p>
+                        <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">{internalData.totalOrders ?? 0}</p>
+                      </div>
+                      <div className="p-3 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl text-center border border-emerald-100 dark:border-emerald-900/30">
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Success</p>
+                        <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{internalData.successfulOrders ?? 0}</p>
+                      </div>
+                      <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-xl text-center border border-red-100 dark:border-red-900/30">
+                        <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase">Cancelled</p>
+                        <p className="text-xl font-bold text-red-700 dark:text-red-300 mt-1">{internalData.cancelledOrders ?? 0}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-1">
+                      {(() => {
+                        const score = internalData.riskScore ?? 0;
+                        if (score >= RISK_THRESHOLD_HIGH) {
+                          return (
+                            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm border border-red-100 dark:border-red-800/50">
+                              <strong>Warning:</strong> This customer has a highly unsafe profile. Please verify this order carefully before processing.
+                            </div>
+                          );
+                        } else if (score >= RISK_THRESHOLD_MED) {
+                          return (
+                            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg text-sm border border-amber-100 dark:border-amber-800/50">
+                              <strong>Caution:</strong> This customer has a moderate risk profile. Proceed with caution.
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-sm border border-green-100 dark:border-green-800/50">
+                              <strong>Safe:</strong> This customer has a good history. The order looks safe to process.
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
                   </div>
                 ) : null}
               </section>

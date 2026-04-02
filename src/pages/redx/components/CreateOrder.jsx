@@ -177,18 +177,18 @@ const CreateOrder = () => {
 
       const result = await createParcel(parcelData).unwrap();
       const trackingId = result.tracking_id || result.data?.tracking_id;
+      const targetOrderId = selectedOrder?.orderData?.id || data.merchant_invoice_id;
 
       if (trackingId) {
         toast.success(t("redx.orderCreatedSuccess"));
 
-        if (selectedOrder?.orderData) {
+        if (targetOrderId) {
           try {
             await shipOrder({
-              id: selectedOrder.orderData.id,
+              id: targetOrderId,
               body: {
-                shippingTrackingId: trackingId,
-                shippingProvider: "RedX",
-                status: "shipped",
+                trackingId: trackingId,
+                provider: "RedX",
               },
             }).unwrap();
             toast.success(t("redx.orderStatusUpdated"));

@@ -1,4 +1,4 @@
-import { Search, ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { Search, ArrowUpDown, MoreHorizontal, Filter } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,9 @@ const OrdersTableSection = ({
   setSortBy,
   sortOrder,
   setSortOrder,
+  providerFilter = "All",
+  setProviderFilter = () => {},
+  providerCounts = {},
   headers,
   tableData,
   hideTabs = false,
@@ -96,6 +99,42 @@ const OrdersTableSection = ({
         {hideTabs && <div />}
 
         <div className="flex items-center gap-2">
+          {/* Provider Filter Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl px-3 sm:px-4 flex items-center gap-2 border-gray-200 dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-900 bg-white dark:bg-neutral-900 font-medium text-gray-700 dark:text-gray-300"
+              >
+                <Filter className="w-4 h-4 text-gray-500 hidden sm:block" />
+                <span className="text-sm">
+                  {providerFilter === "All" ? t("common.all") || "All" : providerFilter} 
+                </span>
+                <span className="bg-gray-100 dark:bg-neutral-800 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-400">
+                  {providerCounts?.[providerFilter] || 0}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
+              <DropdownMenuLabel>{t("orders.filterByCourier") || "Filter by Courier"}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {["All", "Steadfast", "Pathao", "RedX", "Manual/System"].map((provider) => (
+                <DropdownMenuItem
+                  key={provider}
+                  onClick={() => setProviderFilter(provider)}
+                  className="flex justify-between items-center cursor-pointer"
+                >
+                  <span className={providerFilter === provider ? "font-bold text-indigo-600 dark:text-indigo-400" : ""}>
+                    {provider === "All" ? t("common.all") || "All" : provider}
+                  </span>
+                  <span className="text-xs bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400 py-0.5 px-2 rounded font-bold">
+                    {providerCounts?.[provider] || 0}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

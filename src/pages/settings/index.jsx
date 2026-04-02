@@ -15,6 +15,7 @@ import {
   CreditCard,
   KeyRound,
   Mail,
+  Printer,
   ChevronLeft
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ import BillingSettings from "./components/BillingSettings";
 import ProfileSettings from "./components/ProfileSettings";
 import SmtpSettings from "./components/SmtpSettings";
 import FraudCheckerSettings from "./components/FraudCheckerSettings";
+import ReceiptSettings from "./components/ReceiptSettings";
 
 const SettingsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,6 +62,7 @@ const SettingsPage = () => {
     { id: "billings", label: "Billings", icon: CreditCard },
     { id: "smtp", label: "SMTP", icon: Mail },
     { id: "fraud-checker", label: "Fraud Checker", icon: ShieldCheck },
+    { id: "receipt-print", label: "Receipt Print URL", icon: Printer },
   ];
 
   const renderContent = () => {
@@ -99,6 +102,8 @@ const SettingsPage = () => {
         return <SmtpSettings />;
       case "fraud-checker":
         return <FraudCheckerSettings />;
+      case "receipt-print":
+        return <ReceiptSettings />;
       default:
         return <ProfileSettings user={currentUser} />;
     }

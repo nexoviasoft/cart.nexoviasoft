@@ -182,7 +182,7 @@ const CreateOrder = () => {
         special_instruction: data.special_instruction || "",
         item_quantity: Number(data.item_quantity),
         item_weight: Number(data.item_weight),
-        amount_to_collect: Number(data.amount_to_collect),
+        amount_to_collect: Math.round(Number(data.amount_to_collect)),
         item_description: data.item_description || "",
       };
 
@@ -198,18 +198,19 @@ const CreateOrder = () => {
         // Get city name from selected city
         const cityName = cities.find(c => c.city_id === Number(data.recipient_city))?.city_name || "";
         
-        // Update the order with shipping information if we have a selected order
-        if (selectedOrder && selectedOrder.orderData) {
+        const targetOrderId = selectedOrder?.orderData?.id || data.merchant_order_id;
+        
+        // Update the order with shipping information
+        if (targetOrderId) {
           try {
             const shipmentData = {
-              shippingTrackingId: consignmentId || trackingCode || "",
-              shippingProvider: "Pathao",
-              status: "shipped",
+              trackingId: consignmentId || trackingCode || "",
+              provider: "Pathao",
               ...(cityName && { shippingCity: cityName }),
             };
             
             await shipOrder({
-              id: selectedOrder.orderData.id,
+              id: targetOrderId,
               body: shipmentData,
             }).unwrap();
             

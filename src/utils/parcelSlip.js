@@ -21,8 +21,13 @@ export const generateParcelSlip = async (order, options = {}) => {
 
   const trackingId = order.shippingTrackingId || `SC-${order.id}`;
   // Company domain from API (auth/me): customDomain, subdomain, or env fallback
-  const trackingPageBase = options.trackingPageBase || window.location.origin;
-  const trackingUrl = `${trackingPageBase.replace(/\/$/, "")}/track-order?trackingId=${encodeURIComponent(trackingId)}`;
+  let trackingUrl = "";
+  if (options.isCustomReceiptUrl) {
+    trackingUrl = options.trackingPageBase;
+  } else {
+    const trackingPageBase = options.trackingPageBase || window.location.origin;
+    trackingUrl = `${trackingPageBase.replace(/\/$/, "")}/track-order?trackingId=${encodeURIComponent(trackingId)}`;
+  }
 
   const companyName = options.companyName || "SquadCart";
   const companyLogo = options.companyLogo || null;

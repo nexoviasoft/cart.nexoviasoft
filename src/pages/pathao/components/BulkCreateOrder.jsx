@@ -5,6 +5,7 @@ import {
   useGetStoresQuery,
   useGetCitiesQuery,
 } from "@/features/pathao/pathaoApiSlice";
+import { useShipOrderMutation } from "@/features/order/orderApiSlice";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import {
 const BulkCreateOrder = () => {
   const { t } = useTranslation();
   const [createBulkOrders, { isLoading }] = useCreateBulkOrdersMutation();
+  const [shipOrder] = useShipOrderMutation();
   const { data: storesData } = useGetStoresQuery();
   const { data: citiesData } = useGetCitiesQuery();
 
@@ -113,7 +115,9 @@ const BulkCreateOrder = () => {
             "amount_to_collect",
           ].includes(header)
         ) {
-          value = Number(value);
+          value = header === "amount_to_collect" 
+            ? Math.round(Number(value)) 
+            : Number(value);
         } else if (header === "item_weight") {
           value = parseFloat(value);
         }
@@ -181,6 +185,31 @@ const BulkCreateOrder = () => {
           t("pathao.bulkOrderCreated") +
             ` ${successCount} ${t("pathao.successful")}, ${failedCount} ${t("pathao.failed")}`,
         );
+        
+        // Auto Update Shipment for successful bulk orders
+        const detailsArray = result.data?.details || [];
+        if (detailsArray.length > 0) {
+          for (const d of detailsArray) {
+            if (d && (d.success === true || d.success === "True" || d.consignment_id) && d.merchant_order_id) {
+              const consignmentId = d.consignment_id;
+              const trackingCode = d.order_tracking_code || d.tracking_code;
+              
+              if (consignmentId || trackingCode) {
+                try {
+                  await shipOrder({
+                    id: d.merchant_order_id,
+                    body: {
+                      trackingId: trackingCode || consignmentId || "",
+                      provider: "Pathao",
+                    }
+                  }).unwrap();
+                } catch(shipErr) {
+                  console.error("Bulk Ship Update Error for", d.merchant_order_id, shipErr);
+                }
+              }
+            }
+          }
+        }
 
         // Reset form
         setFile(null);

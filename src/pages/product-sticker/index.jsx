@@ -5,19 +5,25 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { Printer, Search, Check, Package, QrCode as QrIcon, Barcode as BarIcon, X, Plus, Minus } from "lucide-react";
 import { useGetProductsQuery } from "@/features/product/productApiSlice";
+import { useGetSettingsQuery } from "@/features/setting/settingApiSlice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import JsBarcode from "jsbarcode";
+import QRCode from "qrcode";
 
 const ProductStickerPage = () => {
     const { t } = useTranslation();
     const authUser = useSelector((state) => state.auth.user);
     const { data: products = [], isLoading } = useGetProductsQuery({ companyId: authUser?.companyId });
+    const { data: settings = [] } = useGetSettingsQuery();
+    const setting = settings?.[0] || {};
+    const receiptUrl = setting?.orderReceiptUrl;
     
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [quantity, setQuantity] = useState(1);
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
 
     const filteredProducts = products.filter(p => 
         p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -39,6 +45,19 @@ const ProductStickerPage = () => {
                     });
                 } catch (err) {
                     console.error("Barcode generation failed", err);
+                }
+                
+                if (receiptUrl) {
+                    QRCode.toDataURL(receiptUrl, {
+                        errorCorrectionLevel: "M",
+                        margin: 1,
+                        width: 60,
+                        color: { dark: "#000000", light: "#ffffff" },
+                    })
+                    .then(url => setQrCodeDataUrl(url))
+                    .catch(err => console.error("QR generation failed", err));
+                } else {
+                    setQrCodeDataUrl(null);
                 }
             }, 100);
 
@@ -66,6 +85,11 @@ const ProductStickerPage = () => {
                     <p className="text-[8px] font-bold text-gray-400 uppercase">SKU / ITEM CODE</p>
                     <p className="text-[10px] font-bold text-gray-700">{product?.sku}</p>
                 </div>
+                {qrCodeDataUrl && (
+                    <div className="mx-2">
+                        <img src={qrCodeDataUrl} alt="QR" className="w-12 h-12 object-contain rounded" />
+                    </div>
+                )}
                 <div className="text-right">
                     <p className="text-[8px] font-bold text-gray-400 uppercase">MSRP</p>
                     <p className="text-[14px] font-black text-gray-900">৳ {product?.price}</p>
