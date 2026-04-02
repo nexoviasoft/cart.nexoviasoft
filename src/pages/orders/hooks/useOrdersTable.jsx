@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import OrderActionsDropdown from "../components/OrderActionsDropdown";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Mail, Cog, AlertTriangle } from "lucide-react";
+import { MessageCircle, Mail, Cog, AlertTriangle, Eye } from "lucide-react";
 import { detectFakeOrder } from "@/utils/fakeOrderDetection";
+import { useNavigate } from "react-router-dom";
 
 const useOrdersTable = (
   filteredOrders,
@@ -28,6 +29,7 @@ const useOrdersTable = (
   const { t } = useTranslation();
   const authUser = useSelector((state) => state.auth.user);
   const isReseller = authUser?.role === "RESELLER";
+  const navigate = useNavigate();
 
   // Build a frequency map: phone → order count across ALL orders
   const customerOrderCount = useMemo(() => {
@@ -60,9 +62,20 @@ const useOrdersTable = (
     () =>
       filteredOrders.map((o) => ({
           id: (
-            <span className="font-bold text-gray-900 dark:text-gray-100 italic">
-              #{o.id}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-gray-900 dark:text-gray-100 italic">
+                #{o.id}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400 dark:hover:bg-indigo-900/60 transition-all shrink-0 rounded-full border border-indigo-200/50 dark:border-indigo-800/50 shadow-sm"
+                onClick={() => navigate(`/orders/${o.id}`)}
+                title={t("common.viewDetails", "View Details")}
+              >
+                <Eye className="h-5 w-5" />
+              </Button>
+            </div>
           ),
           createdAt: o.createdAt
             ? new Date(o.createdAt).toLocaleDateString("en-GB", {
