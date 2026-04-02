@@ -44,16 +44,16 @@ const openInvoicePrintWindow = (data) => {
         </style>
       </head>
       <body>
-        <h1>Reseller Commission Invoice</h1>
+        <h1>Reseller Withdrawal Invoice</h1>
         <div class="meta">Invoice # ${data.invoiceNumber}</div>
         <table>
           <tr><th>Reseller</th><td>${data.resellerName}</td></tr>
           <tr><th>Company</th><td>${data.companyName || "—"}</td></tr>
           <tr><th>Paid at</th><td>${formatDate(data.paidAt)}</td></tr>
           <tr><th>Requested at</th><td>${formatDate(data.requestedAt)}</td></tr>
-          <tr><th>Commission Amount</th><td><strong>${Number(data.amount).toFixed(2)}</strong></td></tr>
+          <tr><th>Withdrawn Amount</th><td><strong>${Number(data.amount).toFixed(2)}</strong></td></tr>
         </table>
-        <p class="total">Total Commission: ${Number(data.amount).toFixed(2)}</p>
+        <p class="total">Total Amount: ${Number(data.amount).toFixed(2)}</p>
         <p style="margin-top: 24px; font-size: 0.75rem; color: #888;">Thank you for your business.</p>
         <script>window.onload = function() { window.print(); }<\/script>
       </body>
