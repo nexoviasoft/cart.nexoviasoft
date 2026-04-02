@@ -90,6 +90,7 @@ const CreateOrderPage = () => {
     clearErrors,
     trigger,
     watch,
+    formState: { errors },
   } = form;
 
   const watchedValues = watch([
