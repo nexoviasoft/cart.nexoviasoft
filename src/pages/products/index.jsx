@@ -31,6 +31,7 @@ import {
   useRecoverProductMutation,
   usePublishDraftMutation,
   usePermanentDeleteProductMutation,
+  useGetPendingApprovalProductsQuery,
 } from "@/features/product/productApiSlice";
 import { useGetCategoriesQuery } from "@/features/category/categoryApiSlice";
 
@@ -55,6 +56,7 @@ import {
   ProductsModals,
 } from "@/pages/products/components/list";
 import RestockModal from "@/pages/products/components/RestockModal";
+import PendingProductsTab from "@/pages/products/components/PendingProductsTab";
 import { formatCurrency as formatBDTCurrency } from "@/utils/banglaFormatter";
 
 const ProductsPage = () => {
@@ -62,13 +64,15 @@ const ProductsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const authUser = useSelector((state) => state.auth.user);
+  const isReseller = authUser?.role === "RESELLER";
+  const resellerQueryParam = isReseller ? { resellerId: authUser?.id } : {};
 
   // State - read initial tab from location state (e.g. from create page Drafts/Trash links)
   const [activeTab, setActiveTab] = useState("published");
 
   useEffect(() => {
     const tab = location?.state?.tab;
-    if (tab && ["published", "drafts", "trash"].includes(tab)) {
+    if (tab && ["published", "drafts", "trash", "pending"].includes(tab)) {
       setActiveTab(tab);
       navigate(location.pathname, { replace: true, state: {} });
     }
@@ -82,13 +86,19 @@ const ProductsPage = () => {
   });
   const [period, setPeriod] = useState("weekly");
 
+
+
   // API Queries
   const { data: publishedProducts = [], isLoading: isLoadingPublished } =
-    useGetProductsQuery({ companyId: authUser?.companyId });
+    useGetProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
   const { data: draftProducts = [], isLoading: isLoadingDrafts } =
-    useGetDraftProductsQuery({ companyId: authUser?.companyId });
+    useGetDraftProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
   const { data: trashedProducts = [], isLoading: isLoadingTrash } =
-    useGetTrashedProductsQuery({ companyId: authUser?.companyId });
+    useGetTrashedProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
+  const { data: pendingProducts = [] } = useGetPendingApprovalProductsQuery(
+    { companyId: authUser?.companyId },
+    { skip: !authUser?.companyId || isReseller },
+  );
   const { data: categories = [] } = useGetCategoriesQuery({
     companyId: authUser?.companyId,
   });
@@ -549,6 +559,8 @@ const ProductsPage = () => {
             publishedCount={publishedProducts.length}
             draftsCount={draftProducts.length}
             trashCount={trashedProducts.length}
+            pendingCount={pendingProducts.length}
+            isReseller={isReseller}
           />
           <ProductsTableToolbar
             searchTerm={searchTerm}
@@ -560,16 +572,20 @@ const ProductsPage = () => {
           />
         </div>
 
-        <ReusableTable
-          headers={columns}
-          data={processedData}
-          isLoading={isLoading}
-          totalItems={processedData.length}
-          itemsPerPage={pageSize}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          searchPlaceholder={t("products.searchPlaceholder")}
-        />
+        {activeTab === "pending" ? (
+          <PendingProductsTab />
+        ) : (
+          <ReusableTable
+            headers={columns}
+            data={processedData}
+            isLoading={isLoading}
+            totalItems={processedData.length}
+            itemsPerPage={pageSize}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            searchPlaceholder={t("products.searchPlaceholder")}
+          />
+        )}
       </div>
 
       <ProductsModals

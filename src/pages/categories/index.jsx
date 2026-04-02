@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   startOfMonth,
@@ -53,6 +53,14 @@ const CategoriesPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const authUser = useSelector((state) => state.auth.user);
+  const isReseller = authUser?.role === "RESELLER";
+
+  // Redirect resellers away from the create page
+  useEffect(() => {
+    if (isReseller && window.location.pathname === "/categories/create") {
+      navigate("/categories", { replace: true });
+    }
+  }, [isReseller, navigate]);
 
   // State
   const [activeTab, setActiveTab] = useState("all"); // 'all', 'active', 'disabled'
@@ -331,6 +339,16 @@ const CategoriesPage = () => {
                     <Trash2 className="w-3.5 h-3.5" />
                     {t("categories.statusTrashed")}
                   </span>
+          ) : isReseller ? (
+            // Read-only badge for resellers
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
+              row.isActive
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
+                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+            }`}>
+              {row.isActive ? <CheckCircle className="w-3 h-3" /> : <Archive className="w-3 h-3" />}
+              {row.isActive ? t("common.active") || "Active" : t("common.disabled") || "Disabled"}
+            </span>
           ) : (
             <div className="flex items-center">
               <Switch
@@ -344,7 +362,7 @@ const CategoriesPage = () => {
       {
         header: t("common.actions"),
         field: "actions",
-        render: (row) => (
+        render: isReseller ? () => null : (row) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -409,7 +427,7 @@ const CategoriesPage = () => {
   return (
     <div className="p-6 lg:p-0 bg-[#f8f9fa] dark:bg-[#0b0f14] min-h-screen font-sans space-y-6">
       {/* --- Header --- */}
-      <CategoriesHeader t={t} onAdd={() => navigate("/categories/create")} />
+      <CategoriesHeader t={t} onAdd={() => navigate("/categories/create")} isReseller={isReseller} />
 
       {/* --- Stats Cards --- */}
       <CategoriesStats stats={stats} />

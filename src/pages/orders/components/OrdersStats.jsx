@@ -15,7 +15,7 @@ import {
 import BdtIcon from "@/components/icons/BdtIcon";
 import OrderStatCard from "./OrderStatCard";
 
-const OrdersStats = ({ stats }) => {
+const OrdersStats = ({ stats, isReseller = false }) => {
   const { t } = useTranslation();
 
   // Helper to calculate dynamic trend
@@ -131,7 +131,7 @@ const OrdersStats = ({ stats }) => {
       animate="show"
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
     >
-      {orderStats.map((stat, i) => {
+      {orderStats.filter(stat => !isReseller || stat.title !== (t("orders.statsRevenue") || "Total Revenue")).map((stat, i) => {
         // Calculate trend dynamically based on the current value and a seed
         // In a real scenario, you would pass (stat.currentValue, stat.previousValue)
         const trendData = calculateTrend(

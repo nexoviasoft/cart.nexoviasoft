@@ -160,8 +160,26 @@ const OrdersPage = ({ defaultTab = "All" }) => {
     "Unpaid",
   ];
 
-  // Calculate counts for each tab using stats API data
+  // Calculate counts for each tab
+  // For resellers: count from the actual orders array (already backend-filtered to their own orders)
+  // For admins: use the fast stats API
+  const isReseller = authUser?.role === "RESELLER";
   const tabCounts = useMemo(() => {
+    if (isReseller && orders.length >= 0) {
+      const countByStatus = (status) =>
+        orders.filter((o) => o.status?.toLowerCase() === status.toLowerCase()).length;
+      return {
+        All: orders.length,
+        Pending: countByStatus("pending"),
+        Processing: countByStatus("processing"),
+        Paid: countByStatus("paid"),
+        Shipped: countByStatus("shipped"),
+        Delivered: countByStatus("delivered"),
+        Cancelled: countByStatus("cancelled"),
+        Refunded: countByStatus("refunded"),
+        Unpaid: orders.filter((o) => !o.isPaid && o.status?.toLowerCase() !== "cancelled").length,
+      };
+    }
     return {
       All: stats?.total || 0,
       Pending: stats?.pending || 0,
@@ -173,7 +191,7 @@ const OrdersPage = ({ defaultTab = "All" }) => {
       Refunded: stats?.refunded || 0,
       Unpaid: stats?.unpaidCount || 0,
     };
-  }, [stats]);
+  }, [isReseller, orders, stats]);
 
   // Use custom hook for filtering
   const filteredOrders = useOrdersFilters(
@@ -637,7 +655,20 @@ const OrdersPage = ({ defaultTab = "All" }) => {
         subtitle={defaultTab === "Incomplete" ? (t("orders.incompleteSubtitle") || "Follow up with customers who didn't complete their checkout") : undefined}
       />
 
-      {defaultTab !== "Incomplete" && <OrdersStats stats={stats} />}
+      {defaultTab !== "Incomplete" && (
+        <OrdersStats
+          stats={authUser?.role === "RESELLER" ? {
+            total: tabCounts.All,
+            pending: tabCounts.Pending,
+            processing: tabCounts.Processing,
+            paid: tabCounts.Paid,
+            shipped: tabCounts.Shipped,
+            delivered: tabCounts.Delivered,
+            cancelled: tabCounts.Cancelled,
+          } : stats}
+          isReseller={authUser?.role === "RESELLER"}
+        />
+      )}
 
       <OrdersTableSection
         filteredOrders={filteredOrders}

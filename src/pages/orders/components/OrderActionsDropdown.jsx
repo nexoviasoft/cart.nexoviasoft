@@ -49,6 +49,7 @@ const OrderActionsDropdown = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const authUser = useSelector((state) => state.auth.user);
+  const isReseller = authUser?.role === "RESELLER";
   const companyName =
     authUser?.companyName ||
     authUser?.company?.name ||
@@ -79,7 +80,7 @@ const OrderActionsDropdown = ({
           <Eye className="mr-2 h-4 w-4" />
           View Details
         </DropdownMenuItem>
-        {onFraudCheck && (
+        {!isReseller && onFraudCheck && (
           <DropdownMenuItem
             onClick={onFraudCheck}
             className="text-indigo-600 dark:text-indigo-400 focus:text-indigo-600"
@@ -112,7 +113,7 @@ const OrderActionsDropdown = ({
           <Download className="mr-2 h-4 w-4" />
           {t("orders.printParcelSlip") || "Print Parcel Slip"}
         </DropdownMenuItem>
-        {order.status?.toLowerCase() === "incomplete" && (
+        {!isReseller && order.status?.toLowerCase() === "incomplete" && (
           <>
             <DropdownMenuItem
               onClick={onWhatsApp}
@@ -137,7 +138,7 @@ const OrderActionsDropdown = ({
             </DropdownMenuItem>
           </>
         )}
-        {(order.status?.toLowerCase() === "pending" ||
+        {!isReseller && (order.status?.toLowerCase() === "pending" ||
           order.status?.toLowerCase() === "incomplete" ||
           !order.status) && (
           <DropdownMenuItem onClick={onProcess}>
@@ -145,7 +146,7 @@ const OrderActionsDropdown = ({
             Mark as Processing
           </DropdownMenuItem>
         )}
-        {order.status?.toLowerCase() === "processing" && (
+        {!isReseller && order.status?.toLowerCase() === "processing" && (
           <>
             {order.shippingTrackingId && (
               <DropdownMenuItem
@@ -167,7 +168,7 @@ const OrderActionsDropdown = ({
             </DropdownMenuItem>
           </>
         )}
-        {order.status?.toLowerCase() === "shipped" && (
+        {!isReseller && order.status?.toLowerCase() === "shipped" && (
           <>
             <DropdownMenuItem onClick={onDeliver}>
               <Package className="mr-2 h-4 w-4" />
@@ -182,7 +183,7 @@ const OrderActionsDropdown = ({
             </DropdownMenuItem>
           </>
         )}
-        {order.status?.toLowerCase() === "cancelled" && (
+        {!isReseller && order.status?.toLowerCase() === "cancelled" && (
           <DropdownMenuItem
             onClick={onRefund}
             className="text-orange-600 focus:text-orange-600"
@@ -191,21 +192,25 @@ const OrderActionsDropdown = ({
             {t("orders.refundOrder")}
           </DropdownMenuItem>
         )}
-        {!order.isPaid &&
+        {!isReseller && !order.isPaid &&
           order.status?.toLowerCase() !== "cancelled" && (
             <DropdownMenuItem onClick={onPartialPayment}>
               <CreditCard className="mr-2 h-4 w-4" />
               Record Payment
             </DropdownMenuItem>
           )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={onDelete}
-          className="text-red-600 focus:text-red-600"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Order
-        </DropdownMenuItem>
+        {!isReseller && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onDelete}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Order
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

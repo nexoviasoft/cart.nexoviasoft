@@ -1,6 +1,7 @@
 import { Calendar, Download, Plus, PackageSearch, Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +27,7 @@ const OrdersHeader = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: user } = useGetCurrentUserQuery();
+  const isReseller = user?.role === "RESELLER";
 
   const canCreateOrder = hasPermission(user, FeaturePermission.ORDER_CREATION_MANUAL);
   const canTrackOrder = hasPermission(user, FeaturePermission.ORDER_TRACKING);
@@ -156,14 +158,16 @@ const OrdersHeader = ({
 
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            className="h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full sm:w-auto"
-          >
-            <Download className="w-4 h-4 mr-2 text-slate-500" />
-            {t("orders.export") || "Export"}
-          </Button>
+          {!isReseller && (
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              className="h-10 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full sm:w-auto"
+            >
+              <Download className="w-4 h-4 mr-2 text-slate-500" />
+              {t("orders.export") || "Export"}
+            </Button>
+          )}
           {canTrackOrder && (
             <Button
               onClick={() => navigate("/orders/track")}
@@ -174,14 +178,14 @@ const OrdersHeader = ({
               {t("orders.trackOrder") || "Track Order"}
             </Button>
           )}
-        
+          {!isReseller && (
             <Button
               onClick={() => navigate("/orders/create")}
               className="h-10 rounded-xl bg-[#5347CE] hover:bg-[#4338ca] text-white text-sm font-bold px-6 shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:scale-[1.02] w-full sm:w-auto"
             >
               Create order
             </Button>
-          
+          )}
         </div>
       </div>
     </div>

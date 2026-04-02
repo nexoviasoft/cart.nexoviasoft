@@ -12,6 +12,8 @@ const renderPrice = (amount) =>
 
 export function useInventoryPage() {
   const authUser = useSelector((state) => state.auth.user);
+  const isReseller = authUser?.role === "RESELLER";
+  const resellerId = isReseller ? authUser?.id : undefined;
 
   const [visibleColumns, setVisibleColumns] = useState({
     details: true,
@@ -41,6 +43,7 @@ export function useInventoryPage() {
 
   const { data: products = [], isLoading } = useGetProductsQuery({
     companyId: authUser?.companyId,
+    ...(resellerId ? { resellerId } : {}),
   });
 
   const { data: categories = [] } = useGetCategoriesQuery({

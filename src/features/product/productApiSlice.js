@@ -195,6 +195,27 @@ export const productApiSlice = apiSlice.injectEndpoints({
       }),
       transformResponse: (res) => res?.data,
     }),
+
+    // Reject a reseller-submitted product (admin only)
+    rejectProduct: builder.mutation({
+      query: ({ id, reason }) => ({
+        url: `/products/${id}/reject`,
+        method: "PATCH",
+        body: { reason },
+      }),
+      invalidatesTags: [
+        { type: "products", id: "LIST" },
+        { type: "products", id: "DRAFTS" },
+        { type: "products", id: "PENDING_APPROVAL" },
+      ],
+    }),
+
+    // Get reseller-submitted products pending admin approval
+    getPendingApprovalProducts: builder.query({
+      query: (params) => ({ url: "/products/pending-approval", method: "GET", params }),
+      transformResponse: (res) => res?.data ?? [],
+      providesTags: [{ type: "products", id: "PENDING_APPROVAL" }],
+    }),
   }),
 });
 
@@ -216,4 +237,6 @@ export const {
   usePermanentDeleteProductMutation,
   useGetProductStockHistoryQuery,
   useGetPublicProductQuery,
+  useRejectProductMutation,
+  useGetPendingApprovalProductsQuery,
 } = productApiSlice;

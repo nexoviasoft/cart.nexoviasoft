@@ -55,7 +55,7 @@ const SidebarMenu = () => {
             let sectionItems = section.items || [];
             if (user.role === "RESELLER" && section.id === "orders") {
               sectionItems = sectionItems.filter(
-                (item) => item.title !== "Credit Notes",
+                (item) => item.title !== "Credit Notes" && item.title !== "Courier",
               );
             }
 

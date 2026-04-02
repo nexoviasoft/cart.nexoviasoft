@@ -4,7 +4,7 @@ import { Plus, Tag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-const CategoriesHeader = ({ t, onAdd }) => {
+const CategoriesHeader = ({ t, onAdd, isReseller = false }) => {
   const { t: translate } = useTranslation();
   const translation = t || translate;
 
@@ -25,15 +25,17 @@ const CategoriesHeader = ({ t, onAdd }) => {
         </div>
       </div>
 
-      {/* ── Action button ── */}
-      <Button
-        size="sm"
-        className="h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm"
-        onClick={onAdd}
-      >
-        <Plus className="w-3.5 h-3.5" />
-        {translation("common.add")} {translation("nav.categories")}
-      </Button>
+      {/* ── Action button — hidden for resellers ── */}
+      {!isReseller && (
+        <Button
+          size="sm"
+          className="h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+          onClick={onAdd}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {translation("common.add")} {translation("nav.categories")}
+        </Button>
+      )}
     </div>
   );
 };

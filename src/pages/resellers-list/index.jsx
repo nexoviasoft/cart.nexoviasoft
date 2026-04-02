@@ -8,7 +8,7 @@ import {
   useApproveResellerMutation,
   useDeleteResellerMutation,
   useLazyGetAdminPayoutInvoiceQuery,
-  useCreateAdminResellerPayoutMutation,
+  useMarkPayoutPaidMutation,
 } from "@/features/reseller/resellerApiSlice";
 import { useUpdateSystemuserMutation } from "@/features/systemuser/systemuserApiSlice";
 import {
@@ -24,6 +24,7 @@ import {
   Trash2,
   Download,
   Pencil,
+  CheckCheck,
 } from "lucide-react";
 import BdtIcon from "@/components/icons/BdtIcon";
 
@@ -76,13 +77,8 @@ const ResellersListPage = () => {
   const [deleteReseller, { isLoading: deleting }] = useDeleteResellerMutation();
   const [getAdminPayoutInvoice, { isLoading: invoiceLoading }] =
     useLazyGetAdminPayoutInvoiceQuery();
+  const [markPayoutPaid, { isLoading: markingPayout }] = useMarkPayoutPaidMutation();
   const [expandedId, setExpandedId] = useState(null);
-  const [createPayout, { isLoading: creatingPayout }] =
-    useCreateAdminResellerPayoutMutation();
-  const [payoutModalOpen, setPayoutModalOpen] = useState(false);
-  const [payoutModalReseller, setPayoutModalReseller] = useState(null);
-  const [payoutDetails, setPayoutDetails] = useState("");
-  const [commissionRateInput, setCommissionRateInput] = useState("");
   const [commissionEditReseller, setCommissionEditReseller] = useState(null);
   const [commissionEditValue, setCommissionEditValue] = useState("");
   const navigate = useNavigate();
@@ -149,15 +145,13 @@ const ResellersListPage = () => {
     }
   };
 
-  const handleOpenCommissionModal = (reseller) => {
-    setPayoutModalReseller(reseller);
-    setPayoutDetails("");
-    setCommissionRateInput(
-      reseller?.commissionRate != null
-        ? String(Number(reseller.commissionRate))
-        : "",
-    );
-    setPayoutModalOpen(true);
+  const handleMarkPayoutPaid = async (payoutId) => {
+    try {
+      await markPayoutPaid(payoutId).unwrap();
+      toast.success(t("resellers.payoutMarkedPaid") || "Payout marked as paid");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to mark payout as paid");
+    }
   };
 
   const handleOpenSetCommission = (reseller) => {
@@ -200,46 +194,6 @@ const ResellersListPage = () => {
         err?.data?.message ||
           t("resellers.commissionRateUpdateFailed") ||
           "Failed to update commission %",
-      );
-    }
-  };
-
-  const handleCreateCommissionRequest = async () => {
-    if (!payoutModalReseller) return;
-    if (!payoutDetails.trim()) {
-      toast.error(
-        t("resellers.paymentDetailsRequired") ||
-          "Payment details are required to create a commission request.",
-      );
-      return;
-    }
-    try {
-      const commissionRate =
-        commissionRateInput.trim() === ""
-          ? undefined
-          : Number(commissionRateInput);
-      await createPayout({
-        resellerId: payoutModalReseller.id,
-        body: {
-          paymentDetails: payoutDetails.trim(),
-          ...(commissionRate != null && !Number.isNaN(commissionRate)
-            ? { commissionRate }
-            : {}),
-        },
-      }).unwrap();
-      toast.success(
-        t("resellers.commissionRequestCreated") ||
-          "Commission request created for reseller.",
-      );
-      setPayoutModalOpen(false);
-      setPayoutDetails("");
-      setPayoutModalReseller(null);
-      setCommissionRateInput("");
-    } catch (err) {
-      toast.error(
-        err?.data?.message ||
-          t("resellers.commissionRequestFailed") ||
-          "Failed to create commission request",
       );
     }
   };
@@ -321,8 +275,10 @@ const ResellersListPage = () => {
                   {t("resellers.commissionRate") || "Commission %"}
                 </th>
                 <th className="px-4 py-3 text-right text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-[0.14em]">
-                  {/* pendingPayoutAmount is admin commission still due */}
-                  {t("resellers.pendingCommission") || "Pending Commission"}
+                  {t("resellers.totalEarningPaid") || "Total Earning (Paid)"}
+                </th>
+                <th className="px-4 py-3 text-right text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-[0.14em]">
+                  {t("resellers.payableToReseller") || "Payable to Reseller"}
                 </th>
                 <th className="px-4 py-3 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-[0.14em]">
                   {t("resellers.paymentRequests") || "Payment requests"}
@@ -340,7 +296,7 @@ const ResellersListPage = () => {
               {resellers.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
                   >
                     {t("resellers.noResellers") || "No resellers found."}
@@ -403,6 +359,12 @@ const ResellersListPage = () => {
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-violet-700 dark:text-violet-400">
+                          <span className="inline-flex items-center gap-1">
+                            <BdtIcon className="w-4 h-4 text-violet-500" />
+                            {formatMoney(r.totalWithdrawn)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
@@ -473,17 +435,6 @@ const ResellersListPage = () => {
                                 ? t("resellers.deactivate") || "Deactivate"
                                 : t("resellers.activate") || "Activate"}
                             </button>
-                            {r.isActive && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenCommissionModal(r)}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-sky-600 text-white text-xs font-medium hover:bg-sky-700"
-                              >
-                                <CreditCard className="w-3.5 h-3.5" />
-                                {t("resellers.createCommissionRequest") ||
-                                  "Create Commission Request"}
-                              </button>
-                            )}
                             <button
                               type="button"
                               onClick={() => handleDeleteReseller(r.id)}
@@ -585,7 +536,18 @@ const ResellersListPage = () => {
                                       <td className="px-3 py-2 text-xs text-slate-600 dark:text-slate-400 whitespace-pre-line max-w-xs">
                                         {p.paymentDetails || "—"}
                                       </td>
-                                      <td className="px-3 py-2 text-right">
+                                      <td className="px-3 py-2 text-right space-x-1">
+                                        {p.status === "PENDING" && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleMarkPayoutPaid(p.id)}
+                                            disabled={markingPayout}
+                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-50"
+                                          >
+                                            <CheckCheck className="w-3.5 h-3.5" />
+                                            {t("resellers.markAsPaid") || "Mark as Paid"}
+                                          </button>
+                                        )}
                                         {p.status === "PAID" && (
                                           <button
                                             type="button"
@@ -593,7 +555,7 @@ const ResellersListPage = () => {
                                               handleDownloadInvoice(p.id)
                                             }
                                             disabled={invoiceLoading}
-                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 disabled:opacity-50 ml-2"
+                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-sky-600 text-white text-xs font-medium hover:bg-sky-700 disabled:opacity-50"
                                           >
                                             <Download className="w-3.5 h-3.5" />
                                             {t("resellers.downloadInvoice") ||
@@ -617,114 +579,6 @@ const ResellersListPage = () => {
           </table>
         </div>
       </div>
-      {/* Create Commission Request Modal */}
-      {payoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50 mb-1">
-              {t("resellers.createCommissionRequest") ||
-                "Create Commission Request"}
-            </h2>
-            {payoutModalReseller && (
-              <div className="mb-3 space-y-1">
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t("resellers.createCommissionRequestFor", {
-                    name: payoutModalReseller.name,
-                  }) ||
-                    `For reseller: ${payoutModalReseller.name} (${payoutModalReseller.email})`}
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300">
-                  <div>
-                    <p className="font-medium">
-                      {t("resellers.modalTotalSales") || "Total sales"}
-                    </p>
-                    <p className="text-slate-900 dark:text-slate-50">
-                      {formatMoney(payoutModalReseller.totalEarning)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">
-                      {t("resellers.modalCommissionRate") || "Commission %"}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={commissionRateInput}
-                        onChange={(e) => setCommissionRateInput(e.target.value)}
-                        className="w-20 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
-                      />
-                      <span className="text-slate-500 dark:text-slate-400 text-[11px]">
-                        %
-                      </span>
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="font-medium">
-                      {t("resellers.modalCalculatedCommission") ||
-                        "Calculated commission (BDT)"}
-                    </p>
-                    <p className="text-slate-900 dark:text-slate-50">
-                      {(() => {
-                        const rate =
-                          commissionRateInput.trim() === ""
-                            ? payoutModalReseller.commissionRate != null
-                              ? Number(payoutModalReseller.commissionRate)
-                              : 0
-                            : Number(commissionRateInput) || 0;
-                        const base = Number(
-                          payoutModalReseller.totalEarning || 0,
-                        );
-                        const amount = (base * rate) / 100;
-                        return formatMoney(amount);
-                      })()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-              {t("resellers.paymentDetailsLabel") ||
-                "Payment details (admin bank / bKash etc.)"}
-            </label>
-            <textarea
-              rows={4}
-              value={payoutDetails}
-              onChange={(e) => setPayoutDetails(e.target.value)}
-              placeholder={
-                t("resellers.paymentDetailsPlaceholder") ||
-                "Example: Bank: BRAC Bank, A/C Name, A/C No, Branch\nor bKash: 01XXXXXXXXX"
-              }
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50 mb-4"
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPayoutModalOpen(false);
-                  setPayoutDetails("");
-                  setPayoutModalReseller(null);
-                }}
-                className="px-3 py-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                {t("common.cancel") || "Cancel"}
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateCommissionRequest}
-                disabled={creatingPayout}
-                className="px-3 py-1.5 rounded-full bg-sky-600 text-xs font-medium text-white shadow-sm hover:bg-sky-700 disabled:opacity-50"
-              >
-                {creatingPayout
-                  ? t("resellers.creatingCommissionRequest") || "Creating..."
-                  : t("resellers.createCommissionRequest") ||
-                    "Create Commission Request"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Set Commission % Modal */}
       {commissionEditReseller && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">

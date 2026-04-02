@@ -48,9 +48,9 @@ const useOrdersTable = (
       { header: t("orders.trackingId") || "Tracking ID", field: "trackingId" },
       { header: t("orders.items") || "Items", field: "items" },
       { header: t("common.status") || "Fulfilment", field: "status" },
-      { header: t("common.actions"), field: "actions" },
+      ...(!isReseller ? [{ header: t("common.actions"), field: "actions" }] : []),
     ],
-    [t],
+    [t, isReseller],
   );
 
   const tableData = useMemo(
@@ -183,10 +183,7 @@ const useOrdersTable = (
               <span className="capitalize">{getStatusLabel(o.status)}</span>
             </div>
           ),
-          actions: isReseller ? (
-            // For resellers: limit to view/parcel slip actions only (handled inside dropdown)
-            <OrderActionsDropdown order={o} />
-          ) : (
+          actions: isReseller ? null : (
             <div className="flex items-center gap-2">
               {o.status?.toLowerCase() === "incomplete" && (
                 <>
