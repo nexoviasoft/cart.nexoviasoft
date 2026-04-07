@@ -49,7 +49,8 @@ export default defineConfig({
             id.includes("node_modules/react/") ||
             id.includes("node_modules/react-dom/") ||
             id.includes("node_modules/react-router-dom/") ||
-            id.includes("node_modules/@remix-run/")
+            id.includes("node_modules/@remix-run/") ||
+            id.includes("node_modules/use-sync-external-store/")
           ) {
             return "vendor-react";
           }
