@@ -64,7 +64,7 @@ const ProductsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const authUser = useSelector((state) => state.auth.user);
-  const isReseller = authUser?.role === "RESELLER";
+  const isReseller = authUser?.role === "RESELLER" || authUser?.role === "MERCHANT";
   const resellerQueryParam = isReseller ? { resellerId: authUser?.id } : {};
 
   // State - read initial tab from location state (e.g. from create page Drafts/Trash links)
@@ -88,16 +88,26 @@ const ProductsPage = () => {
 
 
 
-  // API Queries
+  // API Queries — pollingInterval keeps data fresh every 30s automatically
+  const POLL_MS = 30_000;
   const { data: publishedProducts = [], isLoading: isLoadingPublished } =
-    useGetProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
+    useGetProductsQuery(
+      { companyId: authUser?.companyId, ...resellerQueryParam },
+      { pollingInterval: POLL_MS, skip: !authUser?.companyId },
+    );
   const { data: draftProducts = [], isLoading: isLoadingDrafts } =
-    useGetDraftProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
+    useGetDraftProductsQuery(
+      { companyId: authUser?.companyId, ...resellerQueryParam },
+      { pollingInterval: POLL_MS, skip: !authUser?.companyId },
+    );
   const { data: trashedProducts = [], isLoading: isLoadingTrash } =
-    useGetTrashedProductsQuery({ companyId: authUser?.companyId, ...resellerQueryParam });
+    useGetTrashedProductsQuery(
+      { companyId: authUser?.companyId, ...resellerQueryParam },
+      { pollingInterval: POLL_MS, skip: !authUser?.companyId },
+    );
   const { data: pendingProducts = [] } = useGetPendingApprovalProductsQuery(
     { companyId: authUser?.companyId },
-    { skip: !authUser?.companyId || isReseller },
+    { pollingInterval: POLL_MS, skip: !authUser?.companyId || isReseller },
   );
   const { data: categories = [] } = useGetCategoriesQuery({
     companyId: authUser?.companyId,
@@ -381,9 +391,21 @@ const ProductsPage = () => {
                 <span className="text-xs font-bold text-gray-400">IMG</span>
               )}
             </div>
-            <span className="font-semibold text-gray-900 dark:text-white text-sm">
-              {row.name}
-            </span>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                {row.name}
+              </span>
+              {row.status === "pending" && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 w-fit">
+                  ⏳ Awaiting Approval
+                </span>
+              )}
+              {row.status === "draft" && activeTab === "drafts" && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 w-fit">
+                  📝 Draft
+                </span>
+              )}
+            </div>
           </div>
         );
       },
@@ -475,6 +497,47 @@ const ProductsPage = () => {
                 />
               </div>
             ),
+          },
+        ]
+      : []),
+    ...(!isReseller
+      ? [
+          {
+            header: "Reseller",
+            field: "reseller",
+            sortable: false,
+            render: (row) => {
+              if (!row.reseller && !row.resellerId) {
+                return <span className="text-gray-400 text-xs">—</span>;
+              }
+              const reseller = row.reseller;
+              const initials = reseller?.name?.charAt(0)?.toUpperCase() || "R";
+              return (
+                <div className="flex items-center gap-2">
+                  {reseller?.photo ? (
+                    <img
+                      src={reseller.photo}
+                      alt={reseller.name}
+                      className="w-7 h-7 rounded-full object-cover border-2 border-amber-300 shrink-0"
+                    />
+                  ) : (
+                    <span className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/40 border-2 border-amber-300 flex items-center justify-center text-[11px] font-bold text-amber-700 dark:text-amber-400 shrink-0">
+                      {initials}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 truncate leading-none">
+                      {reseller?.name || `Reseller #${row.resellerId}`}
+                    </p>
+                    {reseller?.email && (
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate leading-none mt-0.5">
+                        {reseller.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            },
           },
         ]
       : []),
@@ -584,6 +647,11 @@ const ProductsPage = () => {
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             searchPlaceholder={t("products.searchPlaceholder")}
+            getRowClassName={(row) =>
+              row.resellerId
+                ? "bg-amber-50/60 dark:bg-amber-900/10 border-l-2 border-l-amber-400"
+                : ""
+            }
           />
         )}
       </div>

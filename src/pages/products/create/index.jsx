@@ -366,7 +366,7 @@ function CreateProductPage() {
           images: uploadedImages,
           thumbnail: finalThumbnailUrl || null,
           categoryId: categoryOption?.value || null,
-          status: asDraft ? "draft" : "published",
+          status: asDraft ? "draft" : (['RESELLER', 'MERCHANT', 'reseller', 'merchant'].includes(user?.role?.toLowerCase() || '') ? "pending" : "published"),
           stock: data.stock ? parseInt(data.stock) : 0,
           sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
           variants:

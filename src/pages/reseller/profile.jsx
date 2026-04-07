@@ -100,7 +100,7 @@ const ResellerProfilePage = () => {
               My Profile
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Update your reseller information and contact details.
+              Update your merchant information and contact details.
             </p>
           </div>
         </div>
@@ -177,7 +177,7 @@ const ResellerProfilePage = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
-                    {user.name || user.fullName || "Reseller"}
+                    {user.name || user.fullName || "Merchant"}
                   </p>
                   {user.email && (
                     <p className="truncate text-xs text-slate-500 dark:text-slate-400">

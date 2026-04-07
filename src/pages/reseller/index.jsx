@@ -44,10 +44,10 @@ const openInvoicePrintWindow = (data) => {
         </style>
       </head>
       <body>
-        <h1>Reseller Withdrawal Invoice</h1>
+        <h1>Merchant Withdrawal Invoice</h1>
         <div class="meta">Invoice # ${data.invoiceNumber}</div>
         <table>
-          <tr><th>Reseller</th><td>${data.resellerName}</td></tr>
+          <tr><th>Merchant</th><td>${data.resellerName}</td></tr>
           <tr><th>Company</th><td>${data.companyName || "—"}</td></tr>
           <tr><th>Paid at</th><td>${formatDate(data.paidAt)}</td></tr>
           <tr><th>Requested at</th><td>${formatDate(data.requestedAt)}</td></tr>
@@ -108,7 +108,7 @@ const ResellerDashboardPage = () => {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
             {user?.name || user?.fullName
               ? `Welcome, ${user.name || user.fullName}`
-              : "Reseller Dashboard"}
+              : "Merchant Dashboard"}
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Get a quick overview of your products, sales, and your pending commission balance.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 
@@ -94,10 +94,10 @@ const getFilteredNav = (user) => {
   if (user.role === "RESELLER") {
     const resellerDashboardLink = {
       id: "reseller-dashboard",
-      title: "Reseller Dashboard",
+      title: "Merchant Dashboard",
       tKey: null,
       icon: LayoutDashboard,
-      link: "/reseller",
+      link: "/merchant",
       permission: null,
     };
 
@@ -106,7 +106,7 @@ const getFilteredNav = (user) => {
       title: "My Profile",
       tKey: null,
       icon: User,
-      link: "/reseller/profile",
+      link: "/merchant/profile",
       permission: null,
     };
 
@@ -141,9 +141,9 @@ function CollapsibleSection({ section, isCollapsed, t }) {
     if (isChildActive) setIsOpen(true);
   }, [location.pathname, location.search, section.items]);
 
-  const toggleSection = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleSection = useCallback(() => {
+    setIsOpen((v) => !v);
+  }, []);
 
   if (isCollapsed) {
     // Simplified view for collapsed state
@@ -215,6 +215,8 @@ function CollapsibleSection({ section, isCollapsed, t }) {
     </div>
   );
 }
+
+CollapsibleSection = memo(CollapsibleSection);
 
 /**
  * Navigation Item Component
@@ -339,6 +341,8 @@ function Item({ item, isLast, t }) {
   );
 }
 
+Item = memo(Item);
+
 /**
  * SideNav Component
  * Main sidebar navigation component
@@ -353,15 +357,10 @@ export default function SideNav({ isMobileMenuOpen, setIsMobileMenuOpen }) {
   // Fetch user data
   const { data: user } = useGetCurrentUserQuery();
 
-  const handleLogout = () => {
-    dispatch(userLoggedOut());
-    navigate("/login");
-  };
-
   // Pre-fetch categories
   useGetCategoriesQuery();
 
-  // Get filtered navigation based on permissions
+  // Filtered navigation based on user permissions (recomputed only when user changes)
   const nav = useMemo(() => getFilteredNav(user), [user]);
 
   const companyName =
@@ -372,9 +371,14 @@ export default function SideNav({ isMobileMenuOpen, setIsMobileMenuOpen }) {
     "SquadCart";
   const companyLogo = user?.companyLogo || user?.company?.logo || user?.logo;
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const handleLogout = useCallback(() => {
+    dispatch(userLoggedOut());
+    navigate("/login");
+  }, [dispatch, navigate]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsCollapsed((v) => !v);
+  }, []);
 
   return (
     <>

@@ -63,7 +63,7 @@
     "sendEmail": "Send Email"
   },
   "resellers": {
-    "title": "Resellers Overview",
+    "title": "Marchent Overview",
     "subtitle": "View which reseller added how many products, sold how much, and who requested payment.",
     "reseller": "Reseller",
     "productsAdded": "Products",
@@ -173,7 +173,7 @@
     "termsConditions": "Terms & Conditions",
     "refundPolicy": "Refund Policy",
     "manageUsers": "Manage Users",
-    "resellers": "Resellers",
+    "merchants": "Merchants",
     "upgradePlan": "Upgrade Plan",
     "settings": "Settings",
     "help": "Help",

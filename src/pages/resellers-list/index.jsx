@@ -55,10 +55,10 @@ const openInvoicePrintWindow = (data) => {
         </style>
       </head>
       <body>
-        <h1>Reseller Withdrawal Invoice</h1>
+        <h1>Merchant Withdrawal Invoice</h1>
         <div class="meta">Invoice # ${data.invoiceNumber}</div>
         <table>
-          <tr><th>Reseller</th><td>${data.resellerName}</td></tr>
+          <tr><th>Merchant</th><td>${data.resellerName}</td></tr>
           <tr><th>Company</th><td>${data.companyName || "—"}</td></tr>
           <tr><th>Paid at</th><td>${data.paidAt ? new Date(data.paidAt).toLocaleString() : "—"}</td></tr>
           <tr><th>Requested at</th><td>${data.requestedAt ? new Date(data.requestedAt).toLocaleString() : "—"}</td></tr>
@@ -265,15 +265,15 @@ const ResellersListPage = () => {
                 <User className="h-3.5 w-3.5 text-emerald-300" />
               </span>
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                {t("resellers.title") || "Reseller Network"}
+                {t("resellers.title") || "Merchant Network"}
               </p>
             </div>
             <h1 className="text-3xl tracking-tight font-semibold text-white">
-              {t("resellers.title") || "Resellers Overview"}
+              {t("resellers.title") || "Merchants Overview"}
             </h1>
             <p className="mt-1 text-sm text-slate-300/80 max-w-xl">
               {t("resellers.subtitle") ||
-                "Monitor activity, manage payout requests, and adjust commission rates across your reseller network."}
+                "Monitor activity, manage payout requests, and adjust commission rates across your merchant network."}
             </p>
           </div>
 
@@ -301,7 +301,7 @@ const ResellersListPage = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Reseller</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Merchant</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Performance</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Financials</th>
                 <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Status</th>
@@ -316,7 +316,7 @@ const ResellersListPage = () => {
                       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 mb-4">
                         <User className="h-8 w-8 text-slate-400" />
                       </div>
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">No Resellers Found</h3>
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">No Merchants Found</h3>
                       <p className="text-sm text-slate-500">Your network seems empty at the moment.</p>
                     </div>
                   </td>
@@ -427,7 +427,7 @@ const ResellersListPage = () => {
                           <div className="flex flex-wrap items-center justify-end gap-1.5">
                             <button
                               type="button"
-                              onClick={() => navigate(`/resellers/${r.id}`, { state: { reseller: r } })}
+                              onClick={() => navigate(`/merchants/${r.id}`, { state: { reseller: r } })}
                               className="p-2 rounded-xl text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors"
                               title="View Details"
                             >

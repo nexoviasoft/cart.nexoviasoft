@@ -128,7 +128,7 @@ const RoleBadge = ({ role }) => {
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${colors[role] || colors.EMPLOYEE}`}
     >
-      {role.replace(/_/g, " ")}
+      {role === "RESELLER" ? "MERCHANT" : role.replace(/_/g, " ")}
     </span>
   );
 };

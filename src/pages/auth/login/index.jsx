@@ -87,7 +87,7 @@ const LoginPage = () => {
             );
             toast.success(t("auth.loginSuccess"));
             if (userRole === "RESELLER") {
-              navigate("/reseller");
+              navigate("/merchant");
             } else {
               navigate("/");
             }
@@ -100,7 +100,7 @@ const LoginPage = () => {
           typeof msg === "string" &&
           msg.toLowerCase().includes("reseller account is inactive")
         ) {
-          navigate("/reseller-inactive", { state: { message: msg } });
+          navigate("/merchant-inactive", { state: { message: msg } });
           return;
         }
       }

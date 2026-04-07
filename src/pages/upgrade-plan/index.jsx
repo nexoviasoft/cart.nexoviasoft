@@ -402,8 +402,8 @@ const FEATURES_OPTIONS = [
   },
   {
     value: "RESELLER_MANAGEMENT",
-    label: "Reseller Management",
-    details: "Manage resellers, their commissions and orders.",
+    label: "Merchant Management",
+    details: "Manage merchants, their commissions and orders.",
   },
   {
     value: "MY_CASH",

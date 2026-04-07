@@ -5,13 +5,13 @@ const ResellerInactiveInfoPage = () => {
   const location = useLocation();
   const message =
     location.state?.message ||
-    "Your reseller account is inactive. Please clear any pending payments and contact the admin to reactivate your access.";
+    "Your merchant account is inactive. Please clear any pending payments and contact the admin to reactivate your access.";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="max-w-md w-full rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-xl">
         <h1 className="text-xl font-semibold text-white mb-3">
-          Reseller access temporarily disabled
+          Merchant access temporarily disabled
         </h1>
         <p className="text-sm text-slate-300 mb-4 whitespace-pre-line">
           {message}

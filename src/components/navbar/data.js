@@ -198,7 +198,7 @@ export const navSections = [
         permission: FeaturePermission.ORDER_INVOICE_FINANCE,
         icon: FileText,
       },
-      
+
     ],
   },
   {
@@ -409,9 +409,9 @@ export const navSections = [
       },
       {
         id: 15.5,
-        title: "Resellers",
-        tKey: "nav.resellers",
-        link: "/resellers",
+        title: "Merchants",
+        tKey: "nav.merchants",
+        link: "/merchants",
         permission: FeaturePermission.RESELLER_MANAGEMENT,
         icon: Package,
       },

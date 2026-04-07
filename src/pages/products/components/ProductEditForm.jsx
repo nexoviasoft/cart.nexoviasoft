@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -74,6 +74,7 @@ export default function ProductEditForm({ product, categoryOptions = [] }) {
   const [imageFiles, setImageFiles] = useState([]);
   const { uploadImage, isUploading } = useImageUpload();
   const { user } = useSelector((state) => state.auth);
+  const isInitialized = useRef(false);
   const [selectedType, setSelectedType] = useState(
     Array.isArray(product?.types) && product.types.length > 0 ? product.types[0] : ""
   );
@@ -128,7 +129,14 @@ export default function ProductEditForm({ product, categoryOptions = [] }) {
     }),
     []
   );
+  // Mark initialized AFTER the first render so the effect below won't fire on mount
   useEffect(() => {
+    isInitialized.current = true;
+  }, []);
+
+  useEffect(() => {
+    // Only clear sizes when the user actively changes the type (not during initial load)
+    if (!isInitialized.current) return;
     setSelectedSizes([]);
   }, [selectedType]);
   const {

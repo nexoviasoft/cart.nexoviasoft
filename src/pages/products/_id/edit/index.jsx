@@ -108,6 +108,7 @@ export default function ProductEditPage() {
     handleSubmit,
     setValue,
     watch,
+    trigger,
     formState: { errors, isValid },
   } = useForm({
     resolver: yupResolver(productSchema),
@@ -205,20 +206,25 @@ export default function ProductEditPage() {
 
   const watchedName = watch("name");
 
-  // Pre-fill form and state from product (same structure as create)
+  // Pre-fill form and state from product (core fields — runs once)
   useEffect(() => {
     if (!product || initializedRef.current) return;
     initializedRef.current = true;
-    setValue("name", product.name || "");
-    setValue("price", product.price ?? "");
-    setValue("discountPrice", product.discountPrice ?? "");
-    setValue("description", product.description || "");
-    setValue("stock", product.stock ?? 0);
-    setValue("weight", product.weight ?? "");
-    setValue("length", product.length ?? "");
-    setValue("breadth", product.breadth ?? "");
-    setValue("width", product.width ?? "");
 
+    // ── 1. Form fields ──
+    setValue("name", product.name || "", { shouldValidate: true });
+    setValue("price", product.price ?? "", { shouldValidate: true });
+    setValue("discountPrice", product.discountPrice ?? "", { shouldValidate: true });
+    setValue("description", product.description || "", { shouldValidate: true });
+    setValue("stock", product.stock ?? 0, { shouldValidate: true });
+    setValue("weight", product.weight ?? "", { shouldValidate: true });
+    setValue("length", product.length ?? "", { shouldValidate: true });
+    setValue("breadth", product.breadth ?? "", { shouldValidate: true });
+    setValue("width", product.width ?? "", { shouldValidate: true });
+    // Trigger full validation so isValid becomes true
+    trigger();
+
+    // ── 2. Images ──
     if (product.thumbnail) setThumbnailUrl(product.thumbnail);
     if (product.images?.length) {
       setImageFiles(
@@ -231,12 +237,7 @@ export default function ProductEditPage() {
       );
     }
 
-    if (product.category || product.categoryId) {
-      const catId = product.category?.id ?? product.categoryId;
-      const found = categories.find((c) => c.id === catId);
-      if (found) setCategoryOption({ label: found.name, value: found.id });
-    }
-
+    // ── 3. Product Type ──
     let typeToSelect = "";
     if (product.types) {
       if (Array.isArray(product.types) && product.types.length > 0) {
@@ -263,30 +264,32 @@ export default function ProductEditPage() {
       }
     }
 
+    // ── 4. Sizes  (must run AFTER typeToSelect is known) ──
     if (product.sizes?.length) {
-      const defaultSizes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      const sizeList = [
-        ...new Set([...defaultSizes, ...product.sizes.map(String)]),
-      ];
-      setSizes(sizeList);
-      
       const selectedSizesStrs = product.sizes.map(String);
       setSelectedSizes(selectedSizesStrs);
-      
+
+      // Ensure every saved size appears in the options map for its type
       if (typeToSelect) {
         setDynamicSizeOptionsMap((prev) => {
           const existing = prev[typeToSelect] || [];
-          const newMap = [...existing];
+          const merged = [...existing];
           selectedSizesStrs.forEach((s) => {
-            if (!newMap.find((ex) => ex.value === s)) {
-              newMap.push({ value: s, label: s });
+            if (!merged.find((ex) => ex.value === s)) {
+              merged.push({ value: s, label: s });
             }
           });
-          return { ...prev, [typeToSelect]: newMap };
+          return { ...prev, [typeToSelect]: merged };
         });
+      } else {
+        // No type yet — add sizes to a generic "_default" bucket
+        setSizes((prev) => [
+          ...new Set([...prev, ...selectedSizesStrs]),
+        ]);
       }
     }
 
+    // ── 5. Variants ──
     if (product.variants?.length) {
       setVariants(
         product.variants.map((v, i) => ({
@@ -296,7 +299,16 @@ export default function ProductEditPage() {
         }))
       );
     }
-  }, [product, categories, setValue]);
+  }, [product, setValue, trigger]);
+
+  // Pre-fill category — runs whenever categories load (separate from the main init guard)
+  useEffect(() => {
+    if (!product || !categories.length) return;
+    const catId = product.category?.id ?? product.categoryId;
+    if (!catId) return;
+    const found = categories.find((c) => c.id === catId);
+    if (found) setCategoryOption({ label: found.name, value: found.id });
+  }, [product, categories]);
 
   const handleAddVariant = useCallback(() => {
     if (newVariantName.trim()) {
@@ -378,7 +390,7 @@ export default function ProductEditPage() {
           images: uploadedImages,
           thumbnail: finalThumbnailUrl || null,
           categoryId: categoryOption?.value || null,
-          status: asDraft ? "draft" : "published",
+          status: asDraft ? "draft" : (['RESELLER', 'MERCHANT', 'reseller', 'merchant'].includes(user?.role?.toLowerCase() || '') ? "pending" : "published"),
           stock: data.stock != null ? parseInt(data.stock, 10) : 0,
           sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
           variants:

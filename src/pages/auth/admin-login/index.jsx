@@ -67,7 +67,7 @@ const AdminLoginPage = () => {
             dispatch(userLoggedIn({ accessToken, refreshToken, rememberMe }));
             toast.success(t("auth.adminLoginSuccess"));
             if (userRole === "RESELLER") {
-              navigate("/reseller");
+              navigate("/merchant");
             } else {
               navigate("/");
             }
@@ -80,7 +80,7 @@ const AdminLoginPage = () => {
           typeof msg === "string" &&
           msg.toLowerCase().includes("reseller account is inactive")
         ) {
-          navigate("/reseller-inactive", { state: { message: msg } });
+          navigate("/merchant-inactive", { state: { message: msg } });
           return;
         }
       }
