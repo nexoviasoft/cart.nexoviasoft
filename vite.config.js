@@ -40,40 +40,67 @@ export default defineConfig({
       output: {
         // Manual chunk splitting — keeps vendor libraries in separate long-lived cache groups
         manualChunks(id) {
-          // Core React runtime + Router must stay in the same chunk.
-          // react-router-dom (and @remix-run/*) call React.createContext at
-          // module-init time, so React must already be evaluated when the
-          // router chunk loads. Splitting them into separate chunks causes
-          // dsddas
+          // ─── Core React runtime ────────────────────────────────────────────
+          // react-router-dom, use-sync-external-store, and scheduler all call
+          // React internals at module-init time, so they MUST live in the
+          // same chunk as React itself.
           if (
             id.includes("node_modules/react/") ||
             id.includes("node_modules/react-dom/") ||
             id.includes("node_modules/react-router-dom/") ||
             id.includes("node_modules/@remix-run/") ||
-            id.includes("node_modules/use-sync-external-store/")
+            id.includes("node_modules/use-sync-external-store/") ||
+            id.includes("node_modules/scheduler/")
           ) {
             return "vendor-react";
           }
-          // State management
-          if (id.includes("node_modules/@reduxjs/") || id.includes("node_modules/react-redux/") || id.includes("node_modules/redux/")) {
+
+          // ─── State management ─────────────────────────────────────────────
+          if (
+            id.includes("node_modules/@reduxjs/") ||
+            id.includes("node_modules/react-redux/") ||
+            id.includes("node_modules/redux/")
+          ) {
             return "vendor-redux";
           }
-          // UI / icons
+
+          // ─── i18n ─────────────────────────────────────────────────────────
+          if (
+            id.includes("node_modules/i18next") ||
+            id.includes("node_modules/react-i18next")
+          ) {
+            return "vendor-i18n";
+          }
+
+          // ─── React ecosystem (all call createContext at init time) ─────────
+          // Any package whose name starts with "react-" plus other known
+          // context-heavy wrappers. Keeping them together with React avoids
+          // "createContext is undefined" errors caused by unpredictable
+          // sibling-chunk execution order.
+          if (
+            /\/node_modules\/react-/.test(id) ||
+            id.includes("node_modules/framer-motion/") ||
+            id.includes("node_modules/lottie-react/") ||
+            id.includes("node_modules/input-otp/") ||
+            id.includes("node_modules/@hookform/")
+          ) {
+            return "vendor-react-deps";
+          }
+
+          // ─── UI / icons ───────────────────────────────────────────────────
           if (id.includes("node_modules/lucide-react/")) {
             return "vendor-lucide";
           }
           if (id.includes("node_modules/@radix-ui/")) {
             return "vendor-radix";
           }
-          // Date utilities
+
+          // ─── Date utilities ───────────────────────────────────────────────
           if (id.includes("node_modules/date-fns/")) {
             return "vendor-datefns";
           }
-          // i18n
-          if (id.includes("node_modules/i18next") || id.includes("node_modules/react-i18next")) {
-            return "vendor-i18n";
-          }
-          // Chart / PDF / heavy utilities — isolated so they don't pollute main bundle
+
+          // ─── Heavy / PDF / chart / spreadsheet ────────────────────────────
           if (
             id.includes("node_modules/recharts/") ||
             id.includes("node_modules/jspdf/") ||
@@ -82,7 +109,8 @@ export default defineConfig({
           ) {
             return "vendor-heavy";
           }
-          // Remaining node_modules — generic vendor chunk
+
+          // ─── Everything else ──────────────────────────────────────────────
           if (id.includes("node_modules/")) {
             return "vendor-misc";
           }
