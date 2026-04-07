@@ -72,17 +72,20 @@ export default defineConfig({
             return "vendor-i18n";
           }
 
-          // ─── React ecosystem (all call createContext at init time) ─────────
-          // Any package whose name starts with "react-" plus other known
-          // context-heavy wrappers. Keeping them together with React avoids
-          // "createContext is undefined" errors caused by unpredictable
-          // sibling-chunk execution order.
+          // ─── React ecosystem (all call createContext/useLayoutEffect at init) ─
+          // Two patterns cover all react-wrapper packages:
+          //   1. /\/node_modules\/react-/  → react-* prefixed  (react-hot-toast, react-quill…)
+          //   2. /-react\//                → *-react suffixed  (@tinymce/tinymce-react, lottie-react…)
+          // @radix-ui is intentionally checked AFTER here so it still goes to
+          // vendor-radix (its packages are /react-* prefixed, not *-react suffixed,
+          // so pattern 2 does NOT catch them — but we keep the order explicit).
           if (
-            /\/node_modules\/react-/.test(id) ||
+            /\/node_modules\/react-/.test(id) ||   // react-hot-toast, react-toastify, react-quill…
+            /-react\//.test(id) ||                 // @tinymce/tinymce-react, lottie-react…
             id.includes("node_modules/framer-motion/") ||
-            id.includes("node_modules/lottie-react/") ||
             id.includes("node_modules/input-otp/") ||
-            id.includes("node_modules/@hookform/")
+            id.includes("node_modules/@hookform/") ||
+            id.includes("node_modules/@tinymce/")
           ) {
             return "vendor-react-deps";
           }
