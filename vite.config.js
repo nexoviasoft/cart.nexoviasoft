@@ -72,7 +72,7 @@ export default defineConfig({
             return "vendor-i18n";
           }
 
-          // ─── React ecosystem (all call createContext/useLayoutEffect at init) ─
+          // ─── React ecosystem (all call createContext/useLayoutEffect at init
           // Two patterns cover all react-wrapper packages:
           //   1. /\/node_modules\/react-/  → react-* prefixed  (react-hot-toast, react-quill…)
           //   2. /-react\//                → *-react suffixed  (@tinymce/tinymce-react, lottie-react…)
