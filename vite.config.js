@@ -40,13 +40,18 @@ export default defineConfig({
       output: {
         // Manual chunk splitting — keeps vendor libraries in separate long-lived cache groups
         manualChunks(id) {
-          // Core React runtime
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+          // Core React runtime + Router must stay in the same chunk.
+          // react-router-dom (and @remix-run/*) call React.createContext at
+          // module-init time, so React must already be evaluated when the
+          // router chunk loads. Splitting them into separate chunks causes
+          // dsddas
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/react-router-dom/") ||
+            id.includes("node_modules/@remix-run/")
+          ) {
             return "vendor-react";
-          }
-          // Routing
-          if (id.includes("node_modules/react-router-dom/") || id.includes("node_modules/@remix-run/")) {
-            return "vendor-router";
           }
           // State management
           if (id.includes("node_modules/@reduxjs/") || id.includes("node_modules/react-redux/") || id.includes("node_modules/redux/")) {
