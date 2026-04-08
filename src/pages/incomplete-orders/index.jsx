@@ -399,13 +399,21 @@ const IncompleteOrdersPage = () => {
   };
 
   const handleEmailSubmit = async (values) => {
+    const order = emailModal.order;
+    if (!order) return;
+
+    const customerEmail = order.customer?.email || order.customerEmail;
+    const customerId = order.customerId;
+
     const payload = {
       subject: values.subject.trim(),
       body: values.body.trim(),
-      customerIds: [emailModal.order?.customerId],
+      customerIds: customerId ? [customerId] : [],
+      emails: customerEmail ? [customerEmail] : [],
       ...(smtpConfig.smtpUser ? { smtpUser: smtpConfig.smtpUser } : {}),
       ...(smtpConfig.smtpPass ? { smtpPass: smtpConfig.smtpPass } : {}),
     };
+
     try {
       await sendEmail(payload).unwrap();
       toast.success("Follow-up email sent!");

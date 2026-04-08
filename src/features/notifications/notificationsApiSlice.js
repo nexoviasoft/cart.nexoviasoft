@@ -3,7 +3,7 @@ import { apiSlice } from "../api/apiSlice";
 export const notificationsApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     sendCustomerEmailNotification: builder.mutation({
-      query: ({ subject, body, html, customerIds, smtpUser, smtpPass }) => ({
+      query: ({ subject, body, html, customerIds, emails, smtpUser, smtpPass }) => ({
         url: "/notifications/email/customers",
         method: "POST",
         body: {
@@ -11,6 +11,7 @@ export const notificationsApiSlice = apiSlice.injectEndpoints({
           body,
           ...(html ? { html } : {}),
           ...(customerIds?.length ? { customerIds } : {}),
+          ...(emails?.length ? { emails } : {}),
           ...(smtpUser ? { smtpUser } : {}),
           ...(smtpPass ? { smtpPass } : {}),
         },
