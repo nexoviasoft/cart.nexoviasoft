@@ -10,6 +10,7 @@ import { useGetCategoriesQuery } from "@/features/category/categoryApiSlice";
 import useImageUpload from "@/hooks/useImageUpload";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { decodeJWT } from "@/utils/jwt-decoder";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -90,9 +91,17 @@ const productSchema = yup.object().shape({
 function CreateProductPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, accessToken } = useSelector((state) => state.auth);
+  const tokenPayload = accessToken ? decodeJWT(accessToken)?.payload : null;
+  const resolvedCompanyId =
+    user?.companyId ||
+    user?.company?.companyId ||
+    user?.company?.id ||
+    user?.tenantId ||
+    tokenPayload?.companyId ||
+    null;
   const { data: categories = [] } = useGetCategoriesQuery({
-    companyId: user?.companyId,
+    companyId: resolvedCompanyId,
   });
 
   const [categoryOption, setCategoryOption] = useState(null);
@@ -389,12 +398,12 @@ function CreateProductPage() {
         };
 
         // Create product
-        if (!user?.companyId) {
+        if (!resolvedCompanyId) {
           toast.error("Session expired. Please login again.");
           return;
         }
 
-        const params = { companyId: user.companyId };
+        const params = { companyId: resolvedCompanyId };
         const res = await createProduct({ body: payload, params });
 
         if (res?.data) {
@@ -437,6 +446,8 @@ function CreateProductPage() {
       uploadImage,
       createProduct,
       user,
+      accessToken,
+      resolvedCompanyId,
       navigate,
       saveAsDraft,
       t,
