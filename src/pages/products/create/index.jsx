@@ -356,6 +356,10 @@ function CreateProductPage() {
         }
 
         // Build payload
+        const normalizedRole = (user?.role || "").toLowerCase();
+        const isResellerOrMerchant =
+          normalizedRole === "reseller" || normalizedRole === "merchant";
+
         const payload = {
           name: data.name.trim(),
           price: parseFloat(data.price) || 0,
@@ -366,7 +370,11 @@ function CreateProductPage() {
           images: uploadedImages,
           thumbnail: finalThumbnailUrl || null,
           categoryId: categoryOption?.value || null,
-          status: asDraft ? "draft" : (['RESELLER', 'MERCHANT', 'reseller', 'merchant'].includes(user?.role?.toLowerCase() || '') ? "pending" : "published"),
+          status: asDraft
+            ? "draft"
+            : isResellerOrMerchant
+              ? "pending"
+              : "published",
           stock: data.stock ? parseInt(data.stock) : 0,
           sizes: selectedSizes.length > 0 ? selectedSizes : undefined,
           variants:
@@ -381,6 +389,11 @@ function CreateProductPage() {
         };
 
         // Create product
+        if (!user?.companyId) {
+          toast.error("Session expired. Please login again.");
+          return;
+        }
+
         const params = { companyId: user.companyId };
         const res = await createProduct({ body: payload, params });
 
@@ -408,7 +421,11 @@ function CreateProductPage() {
         }
       } catch (error) {
         console.error("Form submission error:", error);
-        toast.error("An unexpected error occurred. Please try again.");
+        const message =
+          error?.data?.message ||
+          error?.message ||
+          "An unexpected error occurred. Please try again.";
+        toast.error(message);
       }
     },
     [
